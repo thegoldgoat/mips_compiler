@@ -1,4 +1,5 @@
 #include "Assembler.h"
+#include <assert.h>
 #include <iostream>
 #include <sstream>
 
@@ -92,12 +93,35 @@ void Assembler::instructionLine(std::string &line) {
       throw std::runtime_error(LABEL_IN_NONE_SECTION_MESSAGE);
       break;
     case DATA:
-      // Parse variable
+      // Parse variable type
+      stringStream >> stringBuffer;
+
+      if (stringBuffer == ".word") {
+        parseWord(stringStream);
+      } else if (stringBuffer == ".space") {
+        parseSpace(stringStream);
+      }
       break;
     case TEXT:
-      // Parse command
+      parseInstruction(stringStream);
       currentTextSize += 4;
       break;
     }
   }
+}
+
+void Assembler::parseWord(std::stringstream &ss) {
+  assert(currentSection == DATA);
+}
+
+void Assembler::parseSpace(std::stringstream &ss) {
+  assert(currentSection == DATA);
+  uint32_t spaceSize;
+  ss >> spaceSize;
+  std::cout << "[.space] of size " << spaceSize << std::endl;
+  currentDataSize += spaceSize;
+}
+
+void Assembler::parseInstruction(std::stringstream &ss) {
+  assert(currentSection == TEXT);
 }

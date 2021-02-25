@@ -42,4 +42,9 @@ private:
 
   uint32_t currentTextSize = 0;
   uint32_t currentDataSize = 0;
+
+  void parseWord(std::stringstream &ss);
+  void parseInstruction(std::stringstream &ss);
+
+  void parseSpace(std::stringstream &ss);
 };
