@@ -1,3 +1,5 @@
-project('mips_emulator', 'c')
-executable('main', 'src/main.c')
-
+project('mips_emulator', 'cpp')
+executable('main', 'src/main.cpp', \
+    'src/Assembler/Assembler.cpp', \
+    'src/Assembler/Utils.cpp'      \
+)

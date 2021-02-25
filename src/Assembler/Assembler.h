@@ -1,5 +1,6 @@
 #pragma once
 
+#include <fstream>
 #include <stdint.h>
 #include <string>
 #include <vector>
@@ -14,4 +15,4 @@ struct FileObject {
   std::vector<uint32_t> dataSegment;
 };
 
-FileObject assembleFile(std::string fileContent);
+FileObject assembleFile(std::ifstream &fileContent);
