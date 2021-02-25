@@ -6,8 +6,6 @@ Assembler::Assembler(std::ifstream *fileContent) : fileStream(fileContent) {}
 
 FileObject Assembler::assemble() {
 
-  std::string stringBuffer;
-
   FileObject returnValue;
 
   while (std::getline(*fileStream, stringBuffer))
@@ -30,7 +28,7 @@ void Assembler::makeSymbolGlobal(std::string &symbolName) {
   returnValue.symbolTable.push_back({symbolName, SYMBOL_NONE, 0, true});
 }
 
-std::string Assembler::removeBeginningSpaces(std::string input) {
+std::string Assembler::removeBeginningSpaces(std::string &input) {
   uint32_t endSpaceIndex = 0;
 
   for (auto iterator : input) {
@@ -42,8 +40,7 @@ std::string Assembler::removeBeginningSpaces(std::string input) {
   return input.substr(endSpaceIndex);
 }
 
-void Assembler::parseLine(std::string line) {
-  std::string stringBuffer;
+void Assembler::parseLine(std::string &line) {
   line = removeBeginningSpaces(line);
   std::cout << "Parsing " << line << std::endl;
 
@@ -51,27 +48,56 @@ void Assembler::parseLine(std::string line) {
     return;
   } else if (line[0] == '.') {
     // Section or other special keywords
-    std::stringstream noSpaceBuffer(line);
-    noSpaceBuffer >> stringBuffer;
-
-    std::cout << "[.]: Special word: " << stringBuffer << std::endl;
-
-    if (stringBuffer == ".text") {
-      currentSection = TEXT;
-
-    } else if (stringBuffer == ".data") {
-      currentSection = DATA;
-    } else if (stringBuffer == ".globl") {
-      // Read symbol name
-      noSpaceBuffer >> stringBuffer;
-
-      std::cout << "[.globl]: exporting symbol named " << stringBuffer
-                << std::endl;
-
-      makeSymbolGlobal(stringBuffer);
-    }
-
+    dotLine(line);
   } else {
-    // Read
+    instructionLine(line);
+  }
+}
+
+void Assembler::dotLine(std::string &line) {
+  std::stringstream stringStream(line);
+  stringStream >> stringBuffer;
+
+  std::cout << "[.]: Special word: " << stringBuffer << std::endl;
+
+  if (stringBuffer == ".text") {
+    currentSection = TEXT;
+
+  } else if (stringBuffer == ".data") {
+    currentSection = DATA;
+  } else if (stringBuffer == ".globl") {
+    // Read symbol name
+    stringStream >> stringBuffer;
+
+    std::cout << "[.globl]: exporting symbol named " << stringBuffer
+              << std::endl;
+
+    makeSymbolGlobal(stringBuffer);
+  }
+}
+
+#define LABEL_IN_NONE_SECTION_MESSAGE "[ERROR]: Label in 'NONE' section"
+
+void Assembler::instructionLine(std::string &line) {
+  // Read First word and check if it is a label
+  std::stringstream stringStream(line);
+  stringStream >> stringBuffer;
+
+  if (stringBuffer.back() == ':') {
+    stringBuffer.pop_back();
+    std::cout << "[label]: name = " << stringBuffer << std::endl;
+    switch (currentSection) {
+    case NONE:
+      std::cerr << LABEL_IN_NONE_SECTION_MESSAGE << std::endl;
+      throw std::runtime_error(LABEL_IN_NONE_SECTION_MESSAGE);
+      break;
+    case DATA:
+      // Parse variable
+      break;
+    case TEXT:
+      // Parse command
+      currentTextSize += 4;
+      break;
+    }
   }
 }
