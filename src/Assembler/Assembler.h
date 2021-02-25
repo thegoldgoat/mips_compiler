@@ -15,4 +15,22 @@ struct FileObject {
   std::vector<uint32_t> dataSegment;
 };
 
-FileObject assembleFile(std::ifstream &fileContent);
+enum Section { TEXT, DATA, NONE };
+
+class Assembler {
+public:
+  Assembler(std::ifstream *fileContent);
+
+  FileObject assemble();
+
+private:
+  FileObject returnValue;
+  Section currentSection = NONE;
+  std::ifstream *fileStream;
+
+  void makeSymbolGlobal(std::string &symbolName);
+
+  std::string removeBeginningSpaces(std::string input);
+
+  void parseLine(std::string line);
+};

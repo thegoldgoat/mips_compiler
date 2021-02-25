@@ -6,8 +6,12 @@
 
 int main() {
   std::ifstream file1("/home/andrea/Documenti/test.mips");
-  if (file1.is_open())
-    assembleFile(file1);
-  else
-    std::cerr << "Error while opening file: " << strerror(errno) << std::endl;
+  if (!file1.is_open()) {
+    perror("Error while opening file");
+    return -1;
+  }
+
+  Assembler assembler(&file1);
+
+  assembler.assemble();
 }
