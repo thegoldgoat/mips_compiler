@@ -110,8 +110,53 @@ void Assembler::instructionLine(std::string &line) {
   }
 }
 
+int parseValueAndClear(std::stringstream &ss) {
+
+  std::string temp = ss.str();
+
+  std::cout << "[DEBUG2]: " << temp << std::endl;
+  int value = std::stoi(ss.str());
+
+  ss.clear();
+
+  return value;
+}
+
 void Assembler::parseWord(std::stringstream &ss) {
   assert(currentSection == DATA);
+
+  stringBuffer = ss.str();
+
+  stringBuffer = removeBeginningSpaces(stringBuffer);
+
+  std::stringstream tempStream;
+
+  for (auto &iterator : stringBuffer) {
+    switch (iterator) {
+    case ';':
+      // Comment, finish parsing and quit
+      std::cout << "[DEBUG]: semicolumn = " << parseValueAndClear(tempStream)
+                << std::endl;
+      break;
+
+    case ',':
+      // End of word, finish parsing number and continue
+      std::cout << "[DEBUG]: comma = " << parseValueAndClear(tempStream)
+                << std::endl;
+      break;
+
+    case ' ':
+      // If in the middle of a number, finish parsing and expect not to see any
+      // other number
+      std::cout << "[DEBUG]: middle = " << parseValueAndClear(tempStream)
+                << std::endl;
+      break;
+
+    default:
+      // Add to the stringbuilder
+      tempStream >> iterator;
+    }
+  }
 }
 
 void Assembler::parseSpace(std::stringstream &ss) {
