@@ -41,7 +41,7 @@ private:
   void instructionLine(std::string &line);
 
   void parseWord(std::stringstream &ss);
-  void parseInstruction(std::stringstream &ss);
+  void parseInstruction(std::string instructionCode, std::stringstream &ss);
 
   void parseSpace(std::stringstream &ss);
 };

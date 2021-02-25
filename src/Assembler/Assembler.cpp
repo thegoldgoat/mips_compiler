@@ -102,7 +102,6 @@ void Assembler::dotLine(std::string &line) {
               << std::endl;
 
     makeSymbolGlobal(stringBuffer);
-    std::cout << "Debugcanex" << returnValue.symbolTable.size() << std::endl;
   }
 }
 
@@ -135,11 +134,11 @@ void Assembler::instructionLine(std::string &line) {
       }
       break;
     case TEXT:
-      parseInstruction(stringStream);
+      parseInstruction(stringBuffer, stringStream);
       break;
     }
   } else {
-    parseInstruction(stringStream);
+    parseInstruction(stringBuffer, stringStream);
   }
 }
 
@@ -147,7 +146,6 @@ void Assembler::parseWord(std::stringstream &ss) {
   assert(currentSection == DATA);
 
   while (std::getline(ss, stringBuffer, ',')) {
-    std::cout << "[DEBUG3]:" << stringBuffer << std::endl;
     try {
       returnValue.dataSegment.push_back(std::stoi(stringBuffer));
     } catch (std::invalid_argument) {
@@ -168,6 +166,11 @@ void Assembler::parseSpace(std::stringstream &ss) {
     returnValue.dataSegment.push_back(0);
 }
 
-void Assembler::parseInstruction(std::stringstream &ss) {
+void Assembler::parseInstruction(std::string instructionCode,
+                                 std::stringstream &ss) {
   assert(currentSection == TEXT);
+
+  std::cout << "[DEBUG]: Instruction code: " << instructionCode << std::endl;
+
+  // TODO: Parse operands based on instructionCode
 }
