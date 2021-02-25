@@ -32,16 +32,13 @@ private:
 
   void makeSymbolGlobal(std::string &symbolName);
 
-  std::string removeBeginningSpaces(std::string &input);
+  std::string removeBeginningSpacesAndComment(std::string &input);
 
   void parseLine(std::string &line);
 
   // Helper functions for parseLine
   void dotLine(std::string &line);
   void instructionLine(std::string &line);
-
-  uint32_t currentTextSize = 0;
-  uint32_t currentDataSize = 0;
 
   void parseWord(std::stringstream &ss);
   void parseInstruction(std::stringstream &ss);

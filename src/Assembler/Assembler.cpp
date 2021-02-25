@@ -1,16 +1,26 @@
 #include "Assembler.h"
 #include <assert.h>
 #include <iostream>
+#include <math.h>
 #include <sstream>
+#include <string>
 
 Assembler::Assembler(std::ifstream *fileContent) : fileStream(fileContent) {}
 
 FileObject Assembler::assemble() {
-
-  FileObject returnValue;
-
-  while (std::getline(*fileStream, stringBuffer))
-    parseLine(stringBuffer);
+  int lineNumber = 1;
+  while (std::getline(*fileStream, stringBuffer)) {
+    try {
+      parseLine(stringBuffer);
+    } catch (std::runtime_error error) {
+      std::cerr << std::endl
+                << "[ASSEMBLER ERROR]: Line number " << lineNumber << std::endl
+                << "Error message: " << error.what() << std::endl
+                << std::endl;
+      throw -1;
+    }
+    lineNumber++;
+  }
 
   return returnValue;
 }
@@ -29,8 +39,10 @@ void Assembler::makeSymbolGlobal(std::string &symbolName) {
   returnValue.symbolTable.push_back({symbolName, SYMBOL_NONE, 0, true});
 }
 
-std::string Assembler::removeBeginningSpaces(std::string &input) {
+std::string Assembler::removeBeginningSpacesAndComment(std::string &input) {
   uint32_t endSpaceIndex = 0;
+  int32_t commentIndex = -1;
+  uint32_t spaceBeforeCommentCount = 0;
 
   for (auto iterator : input) {
     if (iterator != ' ')
@@ -38,16 +50,32 @@ std::string Assembler::removeBeginningSpaces(std::string &input) {
     endSpaceIndex++;
   }
 
-  return input.substr(endSpaceIndex);
+  int inputSize = input.size();
+
+  for (int i = endSpaceIndex; i < inputSize; i++) {
+    if (input[i] == ';') {
+      commentIndex = i;
+      for (i--; i >= 0; i--) {
+        if (input[i] != ' ')
+          break;
+        spaceBeforeCommentCount++;
+      }
+      break;
+    }
+  }
+
+  if (commentIndex == -1)
+    return input.substr(endSpaceIndex);
+  else
+    return input.substr(endSpaceIndex,
+                        commentIndex - spaceBeforeCommentCount - endSpaceIndex);
 }
 
 void Assembler::parseLine(std::string &line) {
-  line = removeBeginningSpaces(line);
+  line = removeBeginningSpacesAndComment(line);
   std::cout << "Parsing " << line << std::endl;
 
-  if (line[0] == ';') {
-    return;
-  } else if (line[0] == '.') {
+  if (line[0] == '.') {
     // Section or other special keywords
     dotLine(line);
   } else {
@@ -74,6 +102,7 @@ void Assembler::dotLine(std::string &line) {
               << std::endl;
 
     makeSymbolGlobal(stringBuffer);
+    std::cout << "Debugcanex" << returnValue.symbolTable.size() << std::endl;
   }
 }
 
@@ -83,6 +112,9 @@ void Assembler::instructionLine(std::string &line) {
   // Read First word and check if it is a label
   std::stringstream stringStream(line);
   stringStream >> stringBuffer;
+
+  if (stringBuffer.size() == 0)
+    return;
 
   if (stringBuffer.back() == ':') {
     stringBuffer.pop_back();
@@ -104,57 +136,23 @@ void Assembler::instructionLine(std::string &line) {
       break;
     case TEXT:
       parseInstruction(stringStream);
-      currentTextSize += 4;
       break;
     }
+  } else {
+    parseInstruction(stringStream);
   }
-}
-
-int parseValueAndClear(std::stringstream &ss) {
-
-  std::string temp = ss.str();
-
-  std::cout << "[DEBUG2]: " << temp << std::endl;
-  int value = std::stoi(ss.str());
-
-  ss.clear();
-
-  return value;
 }
 
 void Assembler::parseWord(std::stringstream &ss) {
   assert(currentSection == DATA);
 
-  stringBuffer = ss.str();
-
-  stringBuffer = removeBeginningSpaces(stringBuffer);
-
-  std::stringstream tempStream;
-
-  for (auto &iterator : stringBuffer) {
-    switch (iterator) {
-    case ';':
-      // Comment, finish parsing and quit
-      std::cout << "[DEBUG]: semicolumn = " << parseValueAndClear(tempStream)
-                << std::endl;
-      break;
-
-    case ',':
-      // End of word, finish parsing number and continue
-      std::cout << "[DEBUG]: comma = " << parseValueAndClear(tempStream)
-                << std::endl;
-      break;
-
-    case ' ':
-      // If in the middle of a number, finish parsing and expect not to see any
-      // other number
-      std::cout << "[DEBUG]: middle = " << parseValueAndClear(tempStream)
-                << std::endl;
-      break;
-
-    default:
-      // Add to the stringbuilder
-      tempStream >> iterator;
+  while (std::getline(ss, stringBuffer, ',')) {
+    std::cout << "[DEBUG3]:" << stringBuffer << std::endl;
+    try {
+      returnValue.dataSegment.push_back(std::stoi(stringBuffer));
+    } catch (std::invalid_argument) {
+      throw std::runtime_error(
+          std::string("Error parsing integer after .word: ") + stringBuffer);
     }
   }
 }
@@ -164,7 +162,10 @@ void Assembler::parseSpace(std::stringstream &ss) {
   uint32_t spaceSize;
   ss >> spaceSize;
   std::cout << "[.space] of size " << spaceSize << std::endl;
-  currentDataSize += spaceSize;
+
+  int wordsCount = ceil((float)spaceSize / 4);
+  for (int i = 0; i < wordsCount; i++)
+    returnValue.dataSegment.push_back(0);
 }
 
 void Assembler::parseInstruction(std::stringstream &ss) {
