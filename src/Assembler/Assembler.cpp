@@ -44,21 +44,18 @@ void Assembler::makeSymbolGlobal(std::string &symbolName) {
 }
 
 void Assembler::addNewSymbol(std::string name, SymbolType type) {
-  // TODO: Fix algorith looks like this target pointer method doesn't work with
-  // the vector since the value pushed in the vector is maybe a deep copy (?)
-
   assert(type != SYMBOL_NONE);
 
   std::cout << "[Symbol]: name = " << name << " type = " << type << std::endl;
 
   // Check if symbol is already in
-  Symbol *target = NULL;
   for (auto &iterator : returnValue.symbolTable) {
     if (iterator.name == name) {
       if (iterator.type == SYMBOL_NONE) {
         // It was previously exported
-        target = &iterator;
-        break;
+        iterator.name = name;
+        iterator.type = type;
+        return;
       } else {
         throw std::runtime_error(
             std::string("Trying to add symbol ") + name +
@@ -67,17 +64,10 @@ void Assembler::addNewSymbol(std::string name, SymbolType type) {
     }
   }
 
-  if (!target) {
-    Symbol newSymbol;
-    newSymbol.isGlobal = false;
-    returnValue.symbolTable.push_back(newSymbol);
-    target = &newSymbol;
-  }
-
   // Add symbol
-  target->name = name;
-  target->type = type;
-  target->address = returnValue.symbolTable.size() * 4;
+  returnValue.symbolTable.push_back(
+      {name, type, static_cast<uint16_t>(returnValue.symbolTable.size() * 4),
+       false});
 }
 
 std::string Assembler::removeBeginningSpacesAndComment(std::string &input) {
