@@ -221,7 +221,13 @@ void Assembler::parseInstruction(std::string instructionCode,
 
   std::cout << "[DEBUG]: Instruction code: " << instructionCode << std::endl;
 
+  uint32_t totalInstruction = 0;
+  InstructionsAvailable instructionEnum = resolveInstruction(instructionCode);
+
+  uint8_t opCode = getOpCode(instructionEnum);
+  totalInstruction |= opCode << 26;
+
   auto operands = getOperands(ss);
 
-  //  std::cout << "[DEBUG]: operands = " << operands[0] << std::endl;
+  populateInstructionWithOperands(operands, &totalInstruction, instructionEnum);
 }
