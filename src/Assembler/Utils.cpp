@@ -316,3 +316,22 @@ uint8_t getRegisterNumberFromString(std::string &registerString) {
 
   return result->second;
 }
+
+#define MAX_INT_16 32767
+#define MIN_INT_16 -32768
+
+int16_t getImmediateFromString(std::string &string) {
+  try {
+    auto result = std::stoi(string);
+
+    if (result > MAX_INT_16 || result < MIN_INT_16) {
+      throw std::out_of_range("");
+    }
+
+    return result;
+  } catch (std::invalid_argument &) {
+    throw std::runtime_error("Immediate invalid: " + string);
+  } catch (std::out_of_range &) {
+    throw std::runtime_error("Immediate out of range: " + string);
+  }
+}

@@ -59,3 +59,5 @@ void populateInstructionWithOperands(std::vector<std::string> &operands,
                                      InstructionsAvailable instructionEnum);
 
 uint8_t getRegisterNumberFromString(std::string &registerString);
+
+int16_t getImmediateFromString(std::string &string);
