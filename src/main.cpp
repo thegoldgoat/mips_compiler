@@ -14,4 +14,6 @@ int main() {
   Assembler assembler(&file1);
 
   assembler.assemble();
+
+  return 0;
 }

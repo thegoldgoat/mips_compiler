@@ -1,4 +1,6 @@
 #include "Assembler.h"
+#include "Utils.h"
+
 #include <assert.h>
 #include <iostream>
 #include <math.h>
@@ -25,6 +27,8 @@ FileObject Assembler::assemble() {
   return returnValue;
 }
 
+#define MAX_SYMBOL_TABLE_SIZE 65536
+
 void Assembler::makeSymbolGlobal(std::string &symbolName) {
 
   // Check if symbol is already in
@@ -37,6 +41,41 @@ void Assembler::makeSymbolGlobal(std::string &symbolName) {
 
   // If not found, add a new symbol with that name
   returnValue.symbolTable.push_back({symbolName, SYMBOL_NONE, 0, true});
+}
+
+void Assembler::addNewSymbol(std::string name, SymbolType type) {
+
+  assert(type != SYMBOL_NONE);
+
+  std::cout << "[Symbol]: name = " << name << " type = " << type << std::endl;
+
+  // Check if symbol is already in
+  Symbol *target = NULL;
+  for (auto &iterator : returnValue.symbolTable) {
+    if (iterator.name == name) {
+      if (iterator.type == SYMBOL_NONE) {
+        // It was previously exported
+        target = &iterator;
+        break;
+      } else {
+        throw std::runtime_error(
+            std::string("Trying to add symbol ") + name +
+            std::string("while already present (and not just exported)."));
+      }
+    }
+  }
+
+  if (!target) {
+    Symbol newSymbol;
+    newSymbol.isGlobal = false;
+    returnValue.symbolTable.push_back(newSymbol);
+    target = &newSymbol;
+  }
+
+  // Add symbol
+  target->name = name;
+  target->type = type;
+  target->address = returnValue.symbolTable.size() * 4;
 }
 
 std::string Assembler::removeBeginningSpacesAndComment(std::string &input) {
@@ -117,13 +156,15 @@ void Assembler::instructionLine(std::string &line) {
 
   if (stringBuffer.back() == ':') {
     stringBuffer.pop_back();
-    std::cout << "[label]: name = " << stringBuffer << std::endl;
     switch (currentSection) {
     case NONE:
       std::cerr << LABEL_IN_NONE_SECTION_MESSAGE << std::endl;
       throw std::runtime_error(LABEL_IN_NONE_SECTION_MESSAGE);
       break;
     case DATA:
+      // Register Symbol
+      addNewSymbol(stringBuffer, SYMBOL_DATA);
+
       // Parse variable type
       stringStream >> stringBuffer;
 
@@ -134,7 +175,15 @@ void Assembler::instructionLine(std::string &line) {
       }
       break;
     case TEXT:
-      parseInstruction(stringBuffer, stringStream);
+      // Register Symbol
+      addNewSymbol(stringBuffer, SYMBOL_TEXT);
+
+      if (!stringStream.eof()) {
+        // Get word after symbol
+        stringStream >> stringBuffer;
+        parseInstruction(stringBuffer, stringStream);
+      }
+
       break;
     }
   } else {
@@ -172,5 +221,7 @@ void Assembler::parseInstruction(std::string instructionCode,
 
   std::cout << "[DEBUG]: Instruction code: " << instructionCode << std::endl;
 
-  // TODO: Parse operands based on instructionCode
+  auto operands = getOperands(ss);
+
+  //  std::cout << "[DEBUG]: operands = " << operands[0] << std::endl;
 }

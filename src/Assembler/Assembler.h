@@ -31,6 +31,7 @@ private:
   std::string stringBuffer;
 
   void makeSymbolGlobal(std::string &symbolName);
+  void addNewSymbol(std::string name, SymbolType type);
 
   std::string removeBeginningSpacesAndComment(std::string &input);
 
