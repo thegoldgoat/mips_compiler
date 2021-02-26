@@ -54,5 +54,8 @@ InstructionsAvailable resolveInstruction(std::string &instruction);
 
 uint8_t getOpCode(InstructionsAvailable &instruction);
 
-void populateInstructionWithOperands(std::vector<std::string> &operands, uint32_t *instruction, InstructionsAvailable instructionEnum);
+void populateInstructionWithOperands(std::vector<std::string> &operands,
+                                     uint32_t *instruction,
+                                     InstructionsAvailable instructionEnum);
 
+uint8_t getRegisterNumberFromString(std::string &registerString);

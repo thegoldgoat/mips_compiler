@@ -14,12 +14,12 @@ FileObject Assembler::assemble() {
   while (std::getline(*fileStream, stringBuffer)) {
     try {
       parseLine(stringBuffer);
-    } catch (std::runtime_error error) {
+    } catch (std::runtime_error &error) {
       std::cerr << std::endl
                 << "[ASSEMBLER ERROR]: Line number " << lineNumber << std::endl
                 << "Error message: " << error.what() << std::endl
                 << std::endl;
-      throw -1;
+      exit(-1);
     }
     lineNumber++;
   }
@@ -44,6 +44,8 @@ void Assembler::makeSymbolGlobal(std::string &symbolName) {
 }
 
 void Assembler::addNewSymbol(std::string name, SymbolType type) {
+  // TODO: Fix algorith looks like this target pointer method doesn't work with
+  // the vector since the value pushed in the vector is maybe a deep copy (?)
 
   assert(type != SYMBOL_NONE);
 
@@ -197,7 +199,7 @@ void Assembler::parseWord(std::stringstream &ss) {
   while (std::getline(ss, stringBuffer, ',')) {
     try {
       returnValue.dataSegment.push_back(std::stoi(stringBuffer));
-    } catch (std::invalid_argument) {
+    } catch (std::invalid_argument &) {
       throw std::runtime_error(
           std::string("Error parsing integer after .word: ") + stringBuffer);
     }
@@ -230,4 +232,9 @@ void Assembler::parseInstruction(std::string instructionCode,
   auto operands = getOperands(ss);
 
   populateInstructionWithOperands(operands, &totalInstruction, instructionEnum);
+
+  if (returnValue.textSegment.size() > MAX_TEXT_SEGMENT_SIZE)
+    throw std::runtime_error("Data segment size exceeded");
+
+  returnValue.textSegment.push_back(totalInstruction);
 }

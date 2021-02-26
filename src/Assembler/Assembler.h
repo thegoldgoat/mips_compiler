@@ -17,6 +17,8 @@ struct FileObject {
 
 enum Section { TEXT, DATA, NONE };
 
+#define MAX_TEXT_SEGMENT_SIZE 66060288
+
 class Assembler {
 public:
   Assembler(std::ifstream *fileContent);
