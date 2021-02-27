@@ -4,6 +4,8 @@
 #include <iostream>
 #include <map>
 
+#define IS_SPACE_OR_TAB(targetChar) targetChar == ' ' || targetChar == '\t'
+
 std::vector<std::string> getOperands(std::stringstream &ss) {
 
   std::vector<std::string> returnValue;
@@ -15,7 +17,7 @@ std::vector<std::string> getOperands(std::stringstream &ss) {
 
     // Remove spaces at the beginning
     for (auto iterator : buffer) {
-      if (iterator == ' ' || iterator == '\t')
+      if (IS_SPACE_OR_TAB(iterator))
         spaceAtBeginning++;
       else
         break;
@@ -23,7 +25,7 @@ std::vector<std::string> getOperands(std::stringstream &ss) {
 
     // Remove spaces at the end
     for (int i = buffer.size() - 1; i >= 0; i--) {
-      if (buffer[i] == ' ' || buffer[i] == '\t')
+      if (IS_SPACE_OR_TAB(buffer[i]))
         spaceAtEnd++;
       else
         break;
@@ -181,4 +183,52 @@ uint8_t getRegisterNumberFromString(std::string &registerString) {
     throw std::runtime_error("Invalid register operand: " + registerString);
 
   return result->second;
+}
+
+std::string removeBorderSpaces(std::string &input) {
+  int beginningSpaceIndex = 0;
+  int endSpacesCount = 0;
+
+  int stringSize = input.size();
+
+  // Count spaces at the beginning
+  for (int i = 0; i < stringSize; i++) {
+    if (IS_SPACE_OR_TAB(input[i]))
+      beginningSpaceIndex++;
+    else
+      break;
+  }
+
+  // Count spaces at the end
+  for (int i = stringSize - 1; i > beginningSpaceIndex; i++) {
+    if (IS_SPACE_OR_TAB(input[i]))
+      endSpacesCount++;
+    else
+      break;
+  }
+
+  return input.substr(beginningSpaceIndex,
+                      stringSize - beginningSpaceIndex - endSpacesCount);
+}
+
+std::pair<std::string, std::string> *getOffsetAndRegister(std::string &input) {
+  std::stringstream ss(input);
+  std::string immediateString;
+  std::string registerString;
+
+  if (!std::getline(ss, immediateString, '('))
+    throw std::runtime_error(
+        "Error during parsing of immediate, argument invalid: " + input);
+
+  if (!std::getline(ss, registerString, ')')) {
+    std::cerr << "[WARNING]: Implicit ($gp) register: " << input << std::endl;
+    registerString = "$gp";
+  } else {
+    registerString = removeBorderSpaces(registerString);
+  }
+
+  immediateString = removeBorderSpaces(immediateString);
+
+  return new std::pair<std::string, std::string>(immediateString,
+                                                 registerString);
 }

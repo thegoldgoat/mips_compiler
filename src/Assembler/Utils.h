@@ -56,3 +56,7 @@ InstructionsAvailable resolveInstruction(std::string &instruction);
 uint8_t getOpCode(InstructionsAvailable &instruction);
 
 uint8_t getRegisterNumberFromString(std::string &registerString);
+
+std::string removeBorderSpaces(std::string &input);
+
+std::pair<std::string, std::string> *getOffsetAndRegister(std::string &input);

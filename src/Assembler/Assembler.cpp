@@ -251,6 +251,8 @@ void Assembler::populateInstructionWithOperands(
 
   try {
 
+    std::pair<std::string, std::string> *offsetAndRegister = NULL;
+
     switch (instructionEnum) {
     case ADD:
     case ADDU:
@@ -298,6 +300,15 @@ void Assembler::populateInstructionWithOperands(
     case LB:
     case SB:
       // Syntax: Rt, offset(Rs) with order in memory as Rs, Rt, offset
+      offsetAndRegister = getOffsetAndRegister(operands.at(1));
+
+      *instruction |= getRegisterNumberFromString(operands.at(0)) << 16;
+      *instruction |= getRegisterNumberFromString(offsetAndRegister->second)
+                      << 21;
+      *instruction |=
+          getImmediateFromString(offsetAndRegister->first, opCode, true, 16);
+
+      delete offsetAndRegister;
       break;
     case LUI:
       // Syntax: Rt, Immediate with order in memory as 00000, rt, Immediate
@@ -308,7 +319,7 @@ void Assembler::populateInstructionWithOperands(
     case BGTZ:
     case BLTZ:
       // Syntax: Rs, offset with order in memory as rs, 00000, offset
-      *instruction |= getRegisterNumberFromString(operands.at(0)) << 26;
+      *instruction |= getRegisterNumberFromString(operands.at(0)) << 21;
       *instruction |= getImmediateFromString(operands.at(1), opCode, false, 16);
       break;
     case J:
@@ -318,13 +329,13 @@ void Assembler::populateInstructionWithOperands(
       break;
     case JALR:
       // Syntax: Rd, Rs with order in memory as rs, 00000, Rd, 00000, 001001
-      *instruction |= getRegisterNumberFromString(operands.at(1)) << 26;
+      *instruction |= getRegisterNumberFromString(operands.at(1)) << 21;
       *instruction |= getRegisterNumberFromString(operands.at(0)) << 11;
       break;
 
     case JR:
       // Syntax: Rs with order in memory as rs, 00000, 00000, 00000, 001000
-      *instruction |= getRegisterNumberFromString(operands.at(0)) << 26;
+      *instruction |= getRegisterNumberFromString(operands.at(0)) << 21;
       break;
     case NOP:
       // All zeros
@@ -358,10 +369,10 @@ void Assembler::populateInstructionWithOperands(
       SET_FUNCT(*instruction, 35);
       break;
     case SLT:
-      SET_FUNCT(*instruction, 0x0);
+      SET_FUNCT(*instruction, 42);
       break;
     case SLTU:
-      SET_FUNCT(*instruction, 0x0);
+      SET_FUNCT(*instruction, 43);
       break;
     case AND:
       SET_FUNCT(*instruction, 36);
