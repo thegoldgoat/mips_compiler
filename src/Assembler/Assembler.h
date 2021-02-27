@@ -5,16 +5,10 @@
 #include <string>
 #include <vector>
 
-#include "../Relocation/Relocation.h"
-#include "../Symbol/Symbol.h"
+#include "../Common/ObjectStructs.hpp"
+#include "../Common/Relocation.hpp"
+#include "../Common/Symbol.hpp"
 #include "Utils.h"
-
-struct FileObject {
-  std::vector<Relocation> relocationTable;
-  std::vector<Symbol> symbolTable;
-  std::vector<uint32_t> textSegment;
-  std::vector<uint32_t> dataSegment;
-};
 
 enum Section { TEXT, DATA, NONE };
 

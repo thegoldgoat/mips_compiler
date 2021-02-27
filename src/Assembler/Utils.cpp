@@ -1,5 +1,5 @@
 #include "Utils.h"
-#include "../Symbol/Symbol.h"
+#include "../Common/Symbol.hpp"
 #include <assert.h>
 #include <iostream>
 #include <map>

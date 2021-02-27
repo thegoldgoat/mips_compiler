@@ -1,4 +1,4 @@
-#include "Symbol.h"
+#include "Symbol.hpp"
 
 bool isValidSymbolName(std::string &symbolName) {
 
