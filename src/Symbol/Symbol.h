@@ -10,3 +10,5 @@ struct Symbol {
   uint16_t address;
   bool isGlobal;
 };
+
+bool isValidSymbolName(std::string &symbolName);

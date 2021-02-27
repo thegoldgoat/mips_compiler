@@ -1,4 +1,5 @@
 #include "Utils.h"
+#include "../Symbol/Symbol.h"
 #include <assert.h>
 #include <iostream>
 #include <map>
@@ -14,7 +15,7 @@ std::vector<std::string> getOperands(std::stringstream &ss) {
 
     // Remove spaces at the beginning
     for (auto iterator : buffer) {
-      if (iterator == ' ')
+      if (iterator == ' ' || iterator == '\t')
         spaceAtBeginning++;
       else
         break;
@@ -22,7 +23,7 @@ std::vector<std::string> getOperands(std::stringstream &ss) {
 
     // Remove spaces at the end
     for (int i = buffer.size() - 1; i >= 0; i--) {
-      if (buffer[i] == ' ')
+      if (buffer[i] == ' ' || buffer[i] == '\t')
         spaceAtEnd++;
       else
         break;
@@ -190,6 +191,13 @@ void populateInstructionWithOperands(std::vector<std::string> &operands,
     case BNE:
       // Syntax: Rt, Rs, Immediate with order in instruction as Rs, Rt,
       // Immediate
+      std::cout << "[DEBUG10]: "
+                << "Arithmetic opperands: rd=" << operands.at(0)
+                << "; rs=" << operands.at(1) << "; rt=" << operands.at(2)
+                << std::endl;
+      *instruction |= getRegisterNumberFromString(operands.at(1)) << 21;
+      *instruction |= getRegisterNumberFromString(operands.at(0)) << 16;
+      *instruction |= getImmediateFromString(operands.at(2));
       break;
 
     case LW:
@@ -283,7 +291,8 @@ void populateInstructionWithOperands(std::vector<std::string> &operands,
       break;
     }
   } catch (std::out_of_range &exception) {
-    throw std::runtime_error("Missing operand");
+    throw std::runtime_error(std::string("Missing operand: ") +
+                             exception.what());
   }
 }
 
@@ -316,18 +325,26 @@ uint8_t getRegisterNumberFromString(std::string &registerString) {
 #define MAX_INT_16 32767
 #define MIN_INT_16 -32768
 
-int16_t getImmediateFromString(std::string &string) {
-  try {
-    auto result = std::stoi(string);
+uint16_t getImmediateFromString(std::string &string) {
 
-    if (result > MAX_INT_16 || result < MIN_INT_16) {
-      throw std::out_of_range("");
+  // Check if it is a valid Symbol, in that case add it to the relocation table
+  // and return 0
+  if (isValidSymbolName(string)) {
+    // Todo: Add new value to the relocation table
+    return 0;
+  } else
+    // Just parse the immediate
+    try {
+      auto result = std::stoi(string);
+
+      if (result > MAX_INT_16 || result < MIN_INT_16) {
+        throw std::out_of_range("");
+      }
+
+      return result;
+    } catch (std::invalid_argument &) {
+      throw std::runtime_error("Immediate invalid: " + string);
+    } catch (std::out_of_range &) {
+      throw std::runtime_error("Immediate out of range: " + string);
     }
-
-    return result;
-  } catch (std::invalid_argument &) {
-    throw std::runtime_error("Immediate invalid: " + string);
-  } catch (std::out_of_range &) {
-    throw std::runtime_error("Immediate out of range: " + string);
-  }
 }

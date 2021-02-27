@@ -60,4 +60,4 @@ void populateInstructionWithOperands(std::vector<std::string> &operands,
 
 uint8_t getRegisterNumberFromString(std::string &registerString);
 
-int16_t getImmediateFromString(std::string &string);
+uint16_t getImmediateFromString(std::string &string);
