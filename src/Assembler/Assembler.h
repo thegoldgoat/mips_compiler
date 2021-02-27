@@ -30,6 +30,8 @@ public:
 
   void prettyPrintObject();
 
+  static void outputToFile(std::ostream &outFile, FileObject &fileObject);
+
 private:
   bool doneAssemblying = false;
 

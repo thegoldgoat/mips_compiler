@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include <string>
 
-enum SymbolType { SYMBOL_TEXT, SYMBOL_DATA, SYMBOL_NONE };
+enum SymbolType : uint8_t { SYMBOL_TEXT, SYMBOL_DATA, SYMBOL_NONE };
 
 struct Symbol {
   std::string name;

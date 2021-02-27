@@ -1,4 +1,5 @@
 #include "Assembler.h"
+#include "ObjectStructs.hpp"
 #include "Utils.h"
 
 #include <assert.h>
@@ -482,4 +483,51 @@ void Assembler::prettyPrintObject() {
 
     printf("[%08x]: Name = %s; Address = %08x; OpCode = %x\n", (count++) * 4,
            iterator.symbolName.c_str(), iterator.address, iterator.opCode);
+}
+
+void Assembler::outputToFile(std::ostream &outFile, FileObject &fileObject) {
+  // * Header
+  ObjectHeader header = {
+      static_cast<uint32_t>(fileObject.textSegment.size()),
+      static_cast<uint32_t>(fileObject.dataSegment.size()),
+      static_cast<uint32_t>(fileObject.symbolTable.size()),
+      static_cast<uint32_t>(fileObject.relocationTable.size())};
+
+  outFile.write((char *)&header, sizeof(header));
+
+  // * text segment
+  for (auto iterator : fileObject.textSegment)
+    outFile.write((char *)&iterator, sizeof(iterator));
+
+  // * data segment
+  for (auto iterator : fileObject.dataSegment)
+    outFile.write((char *)&iterator, sizeof(iterator));
+
+  // * symbol table
+  for (auto iterator : fileObject.symbolTable) {
+    // Write name (size() + 1 includes null terminator)
+    outFile.write((char *)iterator.name.c_str(), iterator.name.size() + 1);
+
+    // Write address
+    outFile.write((char *)&iterator.address, sizeof(uint32_t));
+
+    // Write type
+    outFile.write((char *)&iterator.type, sizeof(SymbolType));
+
+    // Write isGlobal
+    outFile.write((char *)&iterator.isGlobal, sizeof(bool));
+  }
+
+  // * relocation table
+  for (auto iterator : fileObject.relocationTable) {
+    // Write name (size() + 1 includes null terminator)
+    outFile.write((char *)iterator.symbolName.c_str(),
+                  iterator.symbolName.size() + 1);
+
+    // Write address
+    outFile.write((char *)&iterator.address, sizeof(uint32_t));
+
+    // Write type
+    outFile.write((char *)&iterator.opCode, sizeof(uint8_t));
+  }
 }
