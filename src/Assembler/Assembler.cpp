@@ -289,7 +289,7 @@ void Assembler::populateInstructionWithOperands(
       // Immediate
       *instruction |= getRegisterNumberFromString(operands.at(1)) << 21;
       *instruction |= getRegisterNumberFromString(operands.at(0)) << 16;
-      *instruction |= getImmediateFromString(operands.at(2), opCode, true);
+      *instruction |= getImmediateFromString(operands.at(2), opCode, true, 16);
       break;
 
     case LW:
@@ -302,23 +302,29 @@ void Assembler::populateInstructionWithOperands(
     case LUI:
       // Syntax: Rt, Immediate with order in memory as 00000, rt, Immediate
       *instruction |= getRegisterNumberFromString(operands.at(0)) << 16;
-      *instruction |= getImmediateFromString(operands.at(1), opCode, false);
+      *instruction |= getImmediateFromString(operands.at(1), opCode, false, 16);
       break;
     case BLEZ:
     case BGTZ:
     case BLTZ:
       // Syntax: Rs, offset with order in memory as rs, 00000, offset
+      *instruction |= getRegisterNumberFromString(operands.at(0)) << 26;
+      *instruction |= getImmediateFromString(operands.at(1), opCode, false, 16);
       break;
     case J:
     case JAL:
       // Syntax: Immediate with order in memory as Immediate
+      *instruction |= getImmediateFromString(operands.at(0), opCode, true, 24);
       break;
     case JALR:
       // Syntax: Rd, Rs with order in memory as rs, 00000, Rd, 00000, 001001
+      *instruction |= getRegisterNumberFromString(operands.at(1)) << 26;
+      *instruction |= getRegisterNumberFromString(operands.at(0)) << 11;
       break;
 
     case JR:
       // Syntax: Rs with order in memory as rs, 00000, 00000, 00000, 001000
+      *instruction |= getRegisterNumberFromString(operands.at(0)) << 26;
       break;
     case NOP:
       // All zeros
@@ -328,6 +334,7 @@ void Assembler::populateInstructionWithOperands(
     case MFLO:
       // Syntax: Rd with order in memory as 00000, 00000, rd,  00000,
       // funct_code
+      *instruction |= getRegisterNumberFromString(operands.at(0)) << 11;
       break;
     case SYSCALL_INST:
       // No arguments
@@ -398,11 +405,9 @@ void Assembler::populateInstructionWithOperands(
   }
 }
 
-#define MAX_INT_16 32767
-#define MIN_INT_16 -32768
-
-uint16_t Assembler::getImmediateFromString(std::string &string, uint8_t &opCode,
-                                           bool canBeSymbol) {
+uint32_t Assembler::getImmediateFromString(std::string &string, uint8_t &opCode,
+                                           bool canBeSymbol,
+                                           uint8_t immediateBitSize) {
 
   // Check if it is a valid Symbol, in that case add it to the relocation table
   // and return 0
@@ -421,9 +426,8 @@ uint16_t Assembler::getImmediateFromString(std::string &string, uint8_t &opCode,
     try {
       auto result = std::stoi(string);
 
-      if (result > MAX_INT_16 || result < MIN_INT_16) {
+      if (result >> immediateBitSize != 0)
         throw std::out_of_range("");
-      }
 
       return result;
     } catch (std::invalid_argument &) {
