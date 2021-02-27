@@ -24,9 +24,15 @@ class Assembler {
 public:
   Assembler(std::ifstream *fileContent);
 
-  FileObject assemble();
+  void assemble();
+
+  FileObject getObject();
+
+  void prettyPrintObject();
 
 private:
+  bool doneAssemblying = false;
+
   FileObject returnValue;
   Section currentSection = NONE;
   std::ifstream *fileStream;

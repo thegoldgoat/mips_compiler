@@ -15,5 +15,7 @@ int main() {
 
   assembler.assemble();
 
+  assembler.prettyPrintObject();
+
   return 0;
 }

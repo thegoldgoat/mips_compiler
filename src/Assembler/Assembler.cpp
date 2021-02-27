@@ -2,14 +2,16 @@
 #include "Utils.h"
 
 #include <assert.h>
+#include <iomanip>
 #include <iostream>
 #include <math.h>
 #include <sstream>
+#include <stdio.h>
 #include <string>
 
 Assembler::Assembler(std::ifstream *fileContent) : fileStream(fileContent) {}
 
-FileObject Assembler::assemble() {
+void Assembler::assemble() {
   int lineNumber = 1;
   while (std::getline(*fileStream, stringBuffer)) {
     try {
@@ -24,7 +26,14 @@ FileObject Assembler::assemble() {
     lineNumber++;
   }
 
-  return returnValue;
+  doneAssemblying = true;
+}
+
+FileObject Assembler::getObject() {
+  if (doneAssemblying)
+    return returnValue;
+
+  throw std::runtime_error("Trying to get object before assemblying!");
 }
 
 #define MAX_SYMBOL_TABLE_SIZE 65536
@@ -148,6 +157,10 @@ void Assembler::instructionLine(std::string &line) {
 
   if (stringBuffer.back() == ':') {
     stringBuffer.pop_back();
+
+    if (!isValidSymbolName(stringBuffer))
+      throw std::runtime_error("Invalid symbol name: " + stringBuffer);
+
     switch (currentSection) {
     case NONE:
       std::cerr << LABEL_IN_NONE_SECTION_MESSAGE << std::endl;
@@ -416,4 +429,40 @@ uint16_t Assembler::getImmediateFromString(std::string &string,
     } catch (std::out_of_range &) {
       throw std::runtime_error("Immediate out of range: " + string);
     }
+}
+
+void Assembler::prettyPrintObject() {
+
+  unsigned int count = 0;
+
+  std::cout << "--------------------" << std::endl
+            << "--- Text Segment ---" << std::endl;
+
+  for (auto iterator : returnValue.textSegment)
+    printf("[%08x]: %08x\n", (count++) * 4, iterator);
+
+  std::cout << "--------------------" << std::endl
+            << "--- Data Segment ---" << std::endl;
+
+  count = 0;
+  for (auto iterator : returnValue.dataSegment)
+    printf("[%08x]: %08x\n", (count++) * 4, iterator);
+
+  std::cout << "--------------------" << std::endl
+            << "--- Symbol Table ---" << std::endl;
+
+  count = 0;
+  for (auto iterator : returnValue.symbolTable)
+    printf("[%08x]: Name = %s; Address = %08x; Type = %x; isGLobal = %x\n",
+           (count++) * 4, iterator.name.c_str(), iterator.address,
+           iterator.type, iterator.isGlobal);
+
+  std::cout << "--------------------" << std::endl
+            << "- Relocation Table -" << std::endl;
+
+  count = 0;
+  for (auto iterator : returnValue.relocationTable)
+
+    printf("[%08x]: Name = %s; Address = %08x; OpCode = %x\n", (count++) * 4,
+           iterator.symbolName.c_str(), iterator.address, iterator.opCode);
 }
