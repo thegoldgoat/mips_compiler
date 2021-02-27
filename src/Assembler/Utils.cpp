@@ -38,16 +38,26 @@ std::vector<std::string> getOperands(std::stringstream &ss) {
 
 InstructionsAvailable resolveInstruction(std::string &instruction) {
   static const std::map<std::string, InstructionsAvailable> instructionMap{
-      {"add", ADD},   {"addu", ADDU},   {"sub", SUB},   {"subu", SUBU},
-      {"mult", MULT}, {"multu", MULTU}, {"div", DIV},   {"divu", DIVU},
-      {"slt", SLT},   {"sltu", SLTU},   {"and", AND},   {"or", OR},
-      {"nor", NOR},   {"xor", XOR},     {"addi", ADDI}, {"addiu", ADDIU},
-      {"slti", SLTI}, {"sltiu", SLTIU}, {"andi", ANDI}, {"ori", ORI},
-      {"xori", XORI}, {"lw", LW},       {"sw", SW},     {"lbu", LBU},
-      {"lb", LB},     {"sb", SB},       {"lui", LUI},   {"beq", BEQ},
-      {"bne", BNE},   {"blez", BLEZ},   {"bgtz", BGTZ}, {"bltz", BLTZ},
-      {"j", J},       {"jal", JAL},     {"jr", JR},     {"jalr", JALR},
-      {"nop", NOP},   {"mfhi", MFHI},   {"mflo", MFLO},
+      {"add", ADD},   {"addu", ADDU},
+      {"sub", SUB},   {"subu", SUBU},
+      {"mult", MULT}, {"multu", MULTU},
+      {"div", DIV},   {"divu", DIVU},
+      {"slt", SLT},   {"sltu", SLTU},
+      {"and", AND},   {"or", OR},
+      {"nor", NOR},   {"xor", XOR},
+      {"addi", ADDI}, {"addiu", ADDIU},
+      {"slti", SLTI}, {"sltiu", SLTIU},
+      {"andi", ANDI}, {"ori", ORI},
+      {"xori", XORI}, {"lw", LW},
+      {"sw", SW},     {"lbu", LBU},
+      {"lb", LB},     {"sb", SB},
+      {"lui", LUI},   {"beq", BEQ},
+      {"bne", BNE},   {"blez", BLEZ},
+      {"bgtz", BGTZ}, {"bltz", BLTZ},
+      {"j", J},       {"jal", JAL},
+      {"jr", JR},     {"jalr", JALR},
+      {"nop", NOP},   {"mfhi", MFHI},
+      {"mflo", MFLO}, {"syscall", SYSCALL_INST},
   };
 
   auto result = instructionMap.find(instruction);
@@ -78,9 +88,9 @@ uint8_t getOpCode(InstructionsAvailable &instruction) {
   case NOP:
   case MFHI:
   case MFLO:
+  case SYSCALL_INST:
     return 0;
     break;
-
   case ADDI:
     return 8;
     break;
@@ -147,155 +157,6 @@ uint8_t getOpCode(InstructionsAvailable &instruction) {
                            std::to_string(instruction));
 }
 
-#define SET_FUNCT(target, code) target |= code
-
-void populateInstructionWithOperands(std::vector<std::string> &operands,
-                                     uint32_t *instruction,
-                                     InstructionsAvailable instructionEnum) {
-
-  try {
-
-    switch (instructionEnum) {
-    case ADD:
-    case ADDU:
-    case SUB:
-    case SUBU:
-    case SLT:
-    case SLTU:
-    case AND:
-    case OR:
-    case NOR:
-    case XOR:
-      // Syntax: Rd, Rs, Rt with order in instruction as Rs, Rt, Rd,
-      // funct_code
-      *instruction |= getRegisterNumberFromString(operands.at(1)) << 21;
-      *instruction |= getRegisterNumberFromString(operands.at(2)) << 16;
-      *instruction |= getRegisterNumberFromString(operands.at(0)) << 11;
-      break;
-    case MULT:
-    case MULTU:
-    case DIV:
-    case DIVU:
-      // Syntax: Rs, Rt with order in instruction as Rs, Rt
-      *instruction |= getRegisterNumberFromString(operands.at(0)) << 21;
-      *instruction |= getRegisterNumberFromString(operands.at(1)) << 16;
-      break;
-    case ADDI:
-    case ADDIU:
-    case SLTI:
-    case SLTIU:
-    case ANDI:
-    case ORI:
-    case XORI:
-    case BEQ:
-    case BNE:
-      // Syntax: Rt, Rs, Immediate with order in instruction as Rs, Rt,
-      // Immediate
-      std::cout << "[DEBUG10]: "
-                << "Arithmetic opperands: rd=" << operands.at(0)
-                << "; rs=" << operands.at(1) << "; rt=" << operands.at(2)
-                << std::endl;
-      *instruction |= getRegisterNumberFromString(operands.at(1)) << 21;
-      *instruction |= getRegisterNumberFromString(operands.at(0)) << 16;
-      *instruction |= getImmediateFromString(operands.at(2));
-      break;
-
-    case LW:
-    case SW:
-    case LBU:
-    case LB:
-    case SB:
-      // Syntax: Rt, offset(Rs) with order in memory as Rs, Rt, offset
-      break;
-    case LUI:
-      // Syntax: Rt, Immediate with order in memory as 00000, rt, Immediate
-      break;
-    case BLEZ:
-    case BGTZ:
-    case BLTZ:
-      // Syntax: Rs, offset with order in memory as rs, 00000, offset
-      break;
-    case J:
-    case JAL:
-      // Syntax: Immediate with order in memory as Immediate
-      break;
-    case JALR:
-      // Syntax: Rd, Rs with order in memory as rs, 00000, Rd, 00000, 001001
-      break;
-
-    case JR:
-      // Syntax: Rs with order in memory as rs, 00000, 00000, 00000, 001000
-      break;
-    case NOP:
-      // All zeros
-      *instruction = 0;
-      break;
-    case MFHI:
-    case MFLO:
-      // Syntax: Rd with order in memory as 00000, 00000, rd,  00000,
-      // funct_code
-      break;
-    }
-
-    // Funct code for arithmetic
-    switch (instructionEnum) {
-    case ADD:
-      SET_FUNCT(*instruction, 32);
-      break;
-    case ADDU:
-      SET_FUNCT(*instruction, 33);
-      break;
-    case SUB:
-      SET_FUNCT(*instruction, 34);
-      break;
-    case SUBU:
-      SET_FUNCT(*instruction, 35);
-      break;
-    case SLT:
-      SET_FUNCT(*instruction, 0x0);
-      break;
-    case SLTU:
-      SET_FUNCT(*instruction, 0x0);
-      break;
-    case AND:
-      SET_FUNCT(*instruction, 36);
-      break;
-    case OR:
-      SET_FUNCT(*instruction, 37);
-      break;
-    case NOR:
-      SET_FUNCT(*instruction, 39);
-      break;
-    case XOR:
-      SET_FUNCT(*instruction, 40);
-      break;
-    case MULT:
-      SET_FUNCT(*instruction, 24);
-      break;
-    case MULTU:
-      SET_FUNCT(*instruction, 25);
-      break;
-    case DIV:
-      SET_FUNCT(*instruction, 26);
-      break;
-    case DIVU:
-      SET_FUNCT(*instruction, 27);
-      break;
-    case JR:
-      SET_FUNCT(*instruction, 8);
-      break;
-    case JALR:
-      SET_FUNCT(*instruction, 9);
-      break;
-    default:
-      break;
-    }
-  } catch (std::out_of_range &exception) {
-    throw std::runtime_error(std::string("Missing operand: ") +
-                             exception.what());
-  }
-}
-
 uint8_t getRegisterNumberFromString(std::string &registerString) {
   if (registerString[0] != '$')
     throw std::runtime_error("Invalid register operand: " + registerString);
@@ -320,31 +181,4 @@ uint8_t getRegisterNumberFromString(std::string &registerString) {
     throw std::runtime_error("Invalid register operand: " + registerString);
 
   return result->second;
-}
-
-#define MAX_INT_16 32767
-#define MIN_INT_16 -32768
-
-uint16_t getImmediateFromString(std::string &string) {
-
-  // Check if it is a valid Symbol, in that case add it to the relocation table
-  // and return 0
-  if (isValidSymbolName(string)) {
-    // Todo: Add new value to the relocation table
-    return 0;
-  } else
-    // Just parse the immediate
-    try {
-      auto result = std::stoi(string);
-
-      if (result > MAX_INT_16 || result < MIN_INT_16) {
-        throw std::out_of_range("");
-      }
-
-      return result;
-    } catch (std::invalid_argument &) {
-      throw std::runtime_error("Immediate invalid: " + string);
-    } catch (std::out_of_range &) {
-      throw std::runtime_error("Immediate out of range: " + string);
-    }
 }

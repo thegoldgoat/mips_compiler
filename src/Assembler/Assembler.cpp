@@ -71,9 +71,9 @@ void Assembler::addNewSymbol(std::string name, SymbolType type) {
 }
 
 std::string Assembler::removeBeginningSpacesAndComment(std::string &input) {
-  uint32_t endSpaceIndex = 0;
+  int32_t endSpaceIndex = 0;
   int32_t commentIndex = -1;
-  uint32_t spaceBeforeCommentCount = 0;
+  int32_t spaceBeforeCommentCount = 0;
 
   for (auto iterator : input) {
     if (iterator != ' ')
@@ -86,7 +86,7 @@ std::string Assembler::removeBeginningSpacesAndComment(std::string &input) {
   for (int i = endSpaceIndex; i < inputSize; i++) {
     if (input[i] == ';') {
       commentIndex = i;
-      for (i--; i >= 0; i--) {
+      for (i--; i > endSpaceIndex; i--) {
         if (input[i] != ' ')
           break;
         spaceBeforeCommentCount++;
@@ -221,10 +221,199 @@ void Assembler::parseInstruction(std::string instructionCode,
 
   auto operands = getOperands(ss);
 
-  populateInstructionWithOperands(operands, &totalInstruction, instructionEnum);
+  populateInstructionWithOperands(operands, &totalInstruction, opCode,
+                                  instructionEnum);
 
   if (returnValue.textSegment.size() > MAX_TEXT_SEGMENT_SIZE)
     throw std::runtime_error("Data segment size exceeded");
 
   returnValue.textSegment.push_back(totalInstruction);
+}
+
+#define SET_FUNCT(target, code) target |= code
+
+void Assembler::populateInstructionWithOperands(
+    std::vector<std::string> &operands, uint32_t *instruction, uint8_t &opCode,
+    InstructionsAvailable &instructionEnum) {
+
+  try {
+
+    switch (instructionEnum) {
+    case ADD:
+    case ADDU:
+    case SUB:
+    case SUBU:
+    case SLT:
+    case SLTU:
+    case AND:
+    case OR:
+    case NOR:
+    case XOR:
+      // Syntax: Rd, Rs, Rt with order in instruction as Rs, Rt, Rd,
+      // funct_code
+      *instruction |= getRegisterNumberFromString(operands.at(1)) << 21;
+      *instruction |= getRegisterNumberFromString(operands.at(2)) << 16;
+      *instruction |= getRegisterNumberFromString(operands.at(0)) << 11;
+      break;
+    case MULT:
+    case MULTU:
+    case DIV:
+    case DIVU:
+      // Syntax: Rs, Rt with order in instruction as Rs, Rt
+      *instruction |= getRegisterNumberFromString(operands.at(0)) << 21;
+      *instruction |= getRegisterNumberFromString(operands.at(1)) << 16;
+      break;
+    case ADDI:
+    case ADDIU:
+    case SLTI:
+    case SLTIU:
+    case ANDI:
+    case ORI:
+    case XORI:
+    case BEQ:
+    case BNE:
+      // Syntax: Rt, Rs, Immediate with order in instruction as Rs, Rt,
+      // Immediate
+      std::cout << "[DEBUG10]: "
+                << "Arithmetic opperands: rd=" << operands.at(0)
+                << "; rs=" << operands.at(1) << "; rt=" << operands.at(2)
+                << std::endl;
+      *instruction |= getRegisterNumberFromString(operands.at(1)) << 21;
+      *instruction |= getRegisterNumberFromString(operands.at(0)) << 16;
+      *instruction |= getImmediateFromString(operands.at(2), opCode);
+      break;
+
+    case LW:
+    case SW:
+    case LBU:
+    case LB:
+    case SB:
+      // Syntax: Rt, offset(Rs) with order in memory as Rs, Rt, offset
+      break;
+    case LUI:
+      // Syntax: Rt, Immediate with order in memory as 00000, rt, Immediate
+      break;
+    case BLEZ:
+    case BGTZ:
+    case BLTZ:
+      // Syntax: Rs, offset with order in memory as rs, 00000, offset
+      break;
+    case J:
+    case JAL:
+      // Syntax: Immediate with order in memory as Immediate
+      break;
+    case JALR:
+      // Syntax: Rd, Rs with order in memory as rs, 00000, Rd, 00000, 001001
+      break;
+
+    case JR:
+      // Syntax: Rs with order in memory as rs, 00000, 00000, 00000, 001000
+      break;
+    case NOP:
+      // All zeros
+      *instruction = 0;
+      break;
+    case MFHI:
+    case MFLO:
+      // Syntax: Rd with order in memory as 00000, 00000, rd,  00000,
+      // funct_code
+      break;
+    case SYSCALL_INST:
+      // No arguments
+      if (operands.size() != 0)
+        throw std::runtime_error("syscall must have zero operands.");
+      break;
+    }
+
+    // Funct code for arithmetic
+    switch (instructionEnum) {
+    case ADD:
+      SET_FUNCT(*instruction, 32);
+      break;
+    case ADDU:
+      SET_FUNCT(*instruction, 33);
+      break;
+    case SUB:
+      SET_FUNCT(*instruction, 34);
+      break;
+    case SUBU:
+      SET_FUNCT(*instruction, 35);
+      break;
+    case SLT:
+      SET_FUNCT(*instruction, 0x0);
+      break;
+    case SLTU:
+      SET_FUNCT(*instruction, 0x0);
+      break;
+    case AND:
+      SET_FUNCT(*instruction, 36);
+      break;
+    case OR:
+      SET_FUNCT(*instruction, 37);
+      break;
+    case NOR:
+      SET_FUNCT(*instruction, 39);
+      break;
+    case XOR:
+      SET_FUNCT(*instruction, 40);
+      break;
+    case MULT:
+      SET_FUNCT(*instruction, 24);
+      break;
+    case MULTU:
+      SET_FUNCT(*instruction, 25);
+      break;
+    case DIV:
+      SET_FUNCT(*instruction, 26);
+      break;
+    case DIVU:
+      SET_FUNCT(*instruction, 27);
+      break;
+    case JR:
+      SET_FUNCT(*instruction, 8);
+      break;
+    case JALR:
+      SET_FUNCT(*instruction, 9);
+      break;
+    case SYSCALL_INST:
+      SET_FUNCT(*instruction, 12);
+      break;
+    default:
+      break;
+    }
+  } catch (std::out_of_range &exception) {
+    throw std::runtime_error(std::string("Missing operand: ") +
+                             exception.what());
+  }
+}
+
+#define MAX_INT_16 32767
+#define MIN_INT_16 -32768
+
+uint16_t Assembler::getImmediateFromString(std::string &string,
+                                           uint8_t &opCode) {
+
+  // Check if it is a valid Symbol, in that case add it to the relocation table
+  // and return 0
+  if (isValidSymbolName(string)) {
+    returnValue.relocationTable.push_back(
+        {static_cast<uint32_t>(returnValue.textSegment.size() * 4), opCode,
+         string});
+
+    return 0;
+  } else
+    // Just parse the immediate
+    try {
+      auto result = std::stoi(string);
+
+      if (result > MAX_INT_16 || result < MIN_INT_16) {
+        throw std::out_of_range("");
+      }
+
+      return result;
+    } catch (std::invalid_argument &) {
+      throw std::runtime_error("Immediate invalid: " + string);
+    } catch (std::out_of_range &) {
+      throw std::runtime_error("Immediate out of range: " + string);
+    }
 }

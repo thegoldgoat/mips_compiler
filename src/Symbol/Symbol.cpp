@@ -3,7 +3,7 @@
 bool isValidSymbolName(std::string &symbolName) {
 
   // Cannot start with a digit
-  if (symbolName[0] >= '0' || symbolName[0] <= '9')
+  if (symbolName[0] >= '0' && symbolName[0] <= '9')
     return false;
 
   for (auto iterator : symbolName)

@@ -45,7 +45,8 @@ enum InstructionsAvailable {
   JALR,
   NOP,
   MFHI,
-  MFLO
+  MFLO,
+  SYSCALL_INST
 };
 
 std::vector<std::string> getOperands(std::stringstream &ss);
@@ -54,10 +55,4 @@ InstructionsAvailable resolveInstruction(std::string &instruction);
 
 uint8_t getOpCode(InstructionsAvailable &instruction);
 
-void populateInstructionWithOperands(std::vector<std::string> &operands,
-                                     uint32_t *instruction,
-                                     InstructionsAvailable instructionEnum);
-
 uint8_t getRegisterNumberFromString(std::string &registerString);
-
-uint16_t getImmediateFromString(std::string &string);

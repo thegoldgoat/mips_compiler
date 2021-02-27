@@ -7,6 +7,7 @@
 
 #include "../Relocation/Relocation.h"
 #include "../Symbol/Symbol.h"
+#include "Utils.h"
 
 struct FileObject {
   std::vector<Relocation> relocationTable;
@@ -47,4 +48,10 @@ private:
   void parseInstruction(std::string instructionCode, std::stringstream &ss);
 
   void parseSpace(std::stringstream &ss);
+
+  void populateInstructionWithOperands(std::vector<std::string> &operands,
+                                       uint32_t *instruction, uint8_t &opCode,
+                                       InstructionsAvailable &instructionEnum);
+
+  uint16_t getImmediateFromString(std::string &string, uint8_t &opCode);
 };
