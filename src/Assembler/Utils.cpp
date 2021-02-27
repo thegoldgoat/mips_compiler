@@ -167,21 +167,17 @@ void populateInstructionWithOperands(std::vector<std::string> &operands,
     case XOR:
       // Syntax: Rd, Rs, Rt with order in instruction as Rs, Rt, Rd,
       // funct_code
-      std::cout << "[DEBUG]: "
-                << "Arithmetic opperands: rd=" << operands.at(0)
-                << "; rs=" << operands.at(1) << "; rt=" << operands.at(2)
-                << std::endl;
-
       *instruction |= getRegisterNumberFromString(operands.at(1)) << 21;
       *instruction |= getRegisterNumberFromString(operands.at(2)) << 16;
       *instruction |= getRegisterNumberFromString(operands.at(0)) << 11;
-
       break;
     case MULT:
     case MULTU:
     case DIV:
     case DIVU:
       // Syntax: Rs, Rt with order in instruction as Rs, Rt
+      *instruction |= getRegisterNumberFromString(operands.at(0)) << 21;
+      *instruction |= getRegisterNumberFromString(operands.at(1)) << 16;
       break;
     case ADDI:
     case ADDIU:
