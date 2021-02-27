@@ -287,13 +287,9 @@ void Assembler::populateInstructionWithOperands(
     case BNE:
       // Syntax: Rt, Rs, Immediate with order in instruction as Rs, Rt,
       // Immediate
-      std::cout << "[DEBUG10]: "
-                << "Arithmetic opperands: rd=" << operands.at(0)
-                << "; rs=" << operands.at(1) << "; rt=" << operands.at(2)
-                << std::endl;
       *instruction |= getRegisterNumberFromString(operands.at(1)) << 21;
       *instruction |= getRegisterNumberFromString(operands.at(0)) << 16;
-      *instruction |= getImmediateFromString(operands.at(2), opCode);
+      *instruction |= getImmediateFromString(operands.at(2), opCode, true);
       break;
 
     case LW:
@@ -305,6 +301,8 @@ void Assembler::populateInstructionWithOperands(
       break;
     case LUI:
       // Syntax: Rt, Immediate with order in memory as 00000, rt, Immediate
+      *instruction |= getRegisterNumberFromString(operands.at(0)) << 16;
+      *instruction |= getImmediateFromString(operands.at(1), opCode, false);
       break;
     case BLEZ:
     case BGTZ:
@@ -403,12 +401,16 @@ void Assembler::populateInstructionWithOperands(
 #define MAX_INT_16 32767
 #define MIN_INT_16 -32768
 
-uint16_t Assembler::getImmediateFromString(std::string &string,
-                                           uint8_t &opCode) {
+uint16_t Assembler::getImmediateFromString(std::string &string, uint8_t &opCode,
+                                           bool canBeSymbol) {
 
   // Check if it is a valid Symbol, in that case add it to the relocation table
   // and return 0
   if (isValidSymbolName(string)) {
+
+    if (!canBeSymbol)
+      throw std::runtime_error("Immediate invalid: " + string);
+
     returnValue.relocationTable.push_back(
         {static_cast<uint32_t>(returnValue.textSegment.size() * 4), opCode,
          string});

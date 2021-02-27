@@ -59,5 +59,6 @@ private:
                                        uint32_t *instruction, uint8_t &opCode,
                                        InstructionsAvailable &instructionEnum);
 
-  uint16_t getImmediateFromString(std::string &string, uint8_t &opCode);
+  uint16_t getImmediateFromString(std::string &string, uint8_t &opCode,
+                                  bool canBeSymbol);
 };
