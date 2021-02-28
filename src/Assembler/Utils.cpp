@@ -229,6 +229,12 @@ std::pair<std::string, std::string> *getOffsetAndRegister(std::string &input) {
 
   immediateString = removeBorderSpaces(immediateString);
 
+  // When not specified, set it to zero by default
+  if (immediateString.size() == 0) {
+    std::cerr << "[WARNING]: Implicit 0([...]) offset" << std::endl;
+    immediateString = "0";
+  }
+
   return new std::pair<std::string, std::string>(immediateString,
                                                  registerString);
 }

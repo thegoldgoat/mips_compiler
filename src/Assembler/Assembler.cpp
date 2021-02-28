@@ -436,6 +436,7 @@ uint32_t Assembler::getImmediateFromString(std::string &string, uint8_t &opCode,
     try {
       auto result = std::stoi(string);
 
+      // TODO: Detect out of range including negative numbers
       if (result >> immediateBitSize != 0)
         throw std::out_of_range("");
 
