@@ -5,26 +5,17 @@
 Linker::Linker() {}
 
 void Linker::link(std::vector<std::istream *> &inputFiles) {
-  for (auto iterator : inputFiles) {
-    FileObject tempObject = parseObjectFile(*iterator);
-
-    // Build the global map
-    for (auto &symbolsIterator : tempObject.symbolTable) {
-      if (symbolsIterator.isGlobal)
-        globalSymbols[symbolsIterator.name] = {symbolsIterator.type,
-                                               symbolsIterator.address};
-    }
-
-    fileObjects.push_back(tempObject);
-  }
+  for (auto iterator : inputFiles)
+    this->fileObjects.push_back(parseObjectFile(*iterator));
 
   return;
 }
 
-FileObject Linker::parseObjectFile(std::istream &inputFile) {
-  ObjectHeader header;
-  FileObject returnValue;
+ParsedObject Linker::parseObjectFile(std::istream &inputFile) {
+  std::map<std::string, SymbolForMap> localSymbols;
+  std::vector<Relocation> relocationTable;
 
+  ObjectHeader header;
   uint32_t uint32Buffer;
 
   // Read Header
@@ -33,24 +24,27 @@ FileObject Linker::parseObjectFile(std::istream &inputFile) {
   // Read Text Segment
   for (int i = 0; i < header.textSegmentSize; i++) {
     inputFile.read((char *)&uint32Buffer, sizeof(uint32_t));
-    returnValue.textSegment.push_back(uint32Buffer);
+    textSegment.push_back(uint32Buffer);
   }
 
   // Read Data Segment
   for (int i = 0; i < header.dataSegmentSize; i++) {
     inputFile.read((char *)&uint32Buffer, sizeof(uint32_t));
-    returnValue.dataSegment.push_back(uint32Buffer);
+    dataSegment.push_back(uint32Buffer);
   }
 
   // Read Symbol Table
-
   Symbol tempSymbol;
   for (int i = 0; i < header.symbolTableSize; i++) {
     std::getline(inputFile, tempSymbol.name, '\0');
     inputFile.read((char *)&tempSymbol.address, sizeof(tempSymbol.address));
     inputFile.read((char *)&tempSymbol.type, sizeof(tempSymbol.type));
     inputFile.read((char *)&tempSymbol.isGlobal, sizeof(tempSymbol.isGlobal));
-    returnValue.symbolTable.push_back(tempSymbol);
+
+    if (tempSymbol.isGlobal)
+      globalSymbols[tempSymbol.name] = {tempSymbol.type, tempSymbol.address};
+    else
+      localSymbols[tempSymbol.name] = {tempSymbol.type, tempSymbol.address};
   }
 
   // Read Relocation Table
@@ -61,8 +55,8 @@ FileObject Linker::parseObjectFile(std::istream &inputFile) {
                    sizeof(tempRelocation.address));
     inputFile.read((char *)&tempRelocation.opCode,
                    sizeof(tempRelocation.opCode));
-    returnValue.relocationTable.push_back(tempRelocation);
+    relocationTable.push_back(tempRelocation);
   }
 
-  return returnValue;
+  return {localSymbols, relocationTable};
 }

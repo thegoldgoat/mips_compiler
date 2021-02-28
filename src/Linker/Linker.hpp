@@ -4,6 +4,11 @@
 #include <map>
 #include <vector>
 
+struct ParsedObject {
+  std::map<std::string, SymbolForMap> localSymbols;
+  std::vector<Relocation> relocationTable;
+};
+
 class Linker {
 public:
   Linker();
@@ -11,10 +16,12 @@ public:
   void link(std::vector<std::istream *> &inputFiles);
 
 private:
-  FileObject parseObjectFile(std::istream &inputFile);
+  ParsedObject parseObjectFile(std::istream &inputFile);
 
-  std::vector<FileObject> fileObjects;
+  std::vector<ParsedObject> fileObjects;
 
   std::map<std::string, SymbolForMap> globalSymbols;
-  std::map<std::string, SymbolForMap> localSymbols;
+
+  std::vector<uint32_t> textSegment;
+  std::vector<uint32_t> dataSegment;
 };
