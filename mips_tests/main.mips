@@ -1,7 +1,7 @@
 .data
 
 KEY:      .word 0
-CLEARTXT  .space 48
+CLEARTXT: .space 48
 NUM:      .word 0
 
 .text

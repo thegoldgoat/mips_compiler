@@ -284,15 +284,18 @@ void Assembler::populateInstructionWithOperands(
     case ANDI:
     case ORI:
     case XORI:
+      *instruction |= getRegisterNumberFromString(operands.at(1)) << 21;
+      *instruction |= getRegisterNumberFromString(operands.at(0)) << 16;
+      *instruction |= getImmediate16Bit(operands.at(2), false);
+      break;
     case BEQ:
     case BNE:
       // Syntax: Rt, Rs, Immediate with order in instruction as Rs, Rt,
       // Immediate
       *instruction |= getRegisterNumberFromString(operands.at(1)) << 21;
       *instruction |= getRegisterNumberFromString(operands.at(0)) << 16;
-      *instruction |= getImmediateFromString(operands.at(2), opCode, true, 16);
+      *instruction |= getImmediate16Bit(operands.at(2), true);
       break;
-
     case LW:
     case SW:
     case LBU:
@@ -304,27 +307,26 @@ void Assembler::populateInstructionWithOperands(
       *instruction |= getRegisterNumberFromString(operands.at(0)) << 16;
       *instruction |= getRegisterNumberFromString(offsetAndRegister->second)
                       << 21;
-      *instruction |=
-          getImmediateFromString(offsetAndRegister->first, opCode, true, 16);
+      *instruction |= getImmediate16Bit(offsetAndRegister->first, true);
 
       delete offsetAndRegister;
       break;
     case LUI:
       // Syntax: Rt, Immediate with order in memory as 00000, rt, Immediate
       *instruction |= getRegisterNumberFromString(operands.at(0)) << 16;
-      *instruction |= getImmediateFromString(operands.at(1), opCode, false, 16);
+      *instruction |= getImmediate16Bit(operands.at(1), false);
       break;
     case BLEZ:
     case BGTZ:
     case BLTZ:
       // Syntax: Rs, offset with order in memory as rs, 00000, offset
       *instruction |= getRegisterNumberFromString(operands.at(0)) << 21;
-      *instruction |= getImmediateFromString(operands.at(1), opCode, false, 16);
+      *instruction |= getImmediate16Bit(operands.at(1), true);
       break;
     case J:
     case JAL:
       // Syntax: Immediate with order in memory as Immediate
-      *instruction |= getImmediateFromString(operands.at(0), opCode, true, 24);
+      *instruction |= getImmediate24Bit(operands.at(0), opCode);
       break;
     case JALR:
       // Syntax: Rd, Rs with order in memory as rs, 00000, Rd, 00000, 001001
@@ -415,9 +417,28 @@ void Assembler::populateInstructionWithOperands(
   }
 }
 
-uint32_t Assembler::getImmediateFromString(std::string &string, uint8_t &opCode,
-                                           bool canBeSymbol,
-                                           uint8_t immediateBitSize) {
+#define OUT_OF_16_BIT(value) value >= 32768 || value < -32768
+
+uint32_t Assembler::getImmediate16Bit(std::string &string, bool canBeSymbol) {
+  int32_t result = getImmediateFromString(string, 0, canBeSymbol);
+  if (OUT_OF_16_BIT(result))
+    throw std::out_of_range("Immediate out of range: " + string);
+
+  return result & 0x0000ffff;
+}
+
+#define OUT_OF_26_BIT(value) value >= 67108864
+
+uint32_t Assembler::getImmediate24Bit(std::string &string, uint8_t opCode) {
+  int32_t result = getImmediateFromString(string, opCode, true);
+  if (OUT_OF_26_BIT(result))
+    throw std::out_of_range("Immediate out of range: " + string);
+
+  return result;
+}
+
+int32_t Assembler::getImmediateFromString(std::string &string, uint8_t opCode,
+                                          bool canBeSymbol) {
 
   // Check if it is a valid Symbol, in that case add it to the relocation table
   // and return 0
@@ -432,15 +453,9 @@ uint32_t Assembler::getImmediateFromString(std::string &string, uint8_t &opCode,
 
     return 0;
   } else
-    // Just parse the immediate
     try {
-      auto result = std::stoi(string);
-
-      // TODO: Detect out of range including negative numbers
-      if (result >> immediateBitSize != 0)
-        throw std::out_of_range("");
-
-      return result;
+      // Just parse the immediate
+      return std::stoi(string);
     } catch (std::invalid_argument &) {
       throw std::runtime_error("Immediate invalid: " + string);
     } catch (std::out_of_range &) {
