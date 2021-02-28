@@ -11,4 +11,9 @@ struct Symbol {
   bool isGlobal;
 };
 
+struct SymbolForMap {
+  SymbolType type;
+  uint16_t address;
+};
+
 bool isValidSymbolName(std::string &symbolName);

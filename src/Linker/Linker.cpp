@@ -6,8 +6,19 @@ Linker::Linker() {}
 
 void Linker::link(std::vector<std::istream *> &inputFiles) {
   for (auto iterator : inputFiles) {
-    fileObjects.push_back(parseObjectFile(*iterator));
+    FileObject tempObject = parseObjectFile(*iterator);
+
+    // Build the global map
+    for (auto &symbolsIterator : tempObject.symbolTable) {
+      if (symbolsIterator.isGlobal)
+        globalSymbols[symbolsIterator.name] = {symbolsIterator.type,
+                                               symbolsIterator.address};
+    }
+
+    fileObjects.push_back(tempObject);
   }
+
+  return;
 }
 
 FileObject Linker::parseObjectFile(std::istream &inputFile) {
