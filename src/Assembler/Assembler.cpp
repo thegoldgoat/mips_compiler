@@ -56,6 +56,12 @@ void Assembler::addNewSymbol(std::string name, SymbolType type) {
 
   std::cout << "[Symbol]: name = " << name << " type = " << type << std::endl;
 
+  uint16_t newAddress;
+  if (type == SYMBOL_TEXT)
+    newAddress = returnValue.textSegment.size() * 4;
+  else
+    newAddress = returnValue.dataSegment.size() * 4;
+
   // Check if symbol is already in
   for (auto &iterator : returnValue.symbolTable) {
     if (iterator.name == name) {
@@ -63,6 +69,8 @@ void Assembler::addNewSymbol(std::string name, SymbolType type) {
         // It was previously exported
         iterator.name = name;
         iterator.type = type;
+        iterator.address = newAddress;
+
         return;
       } else {
         throw std::runtime_error(
@@ -73,9 +81,7 @@ void Assembler::addNewSymbol(std::string name, SymbolType type) {
   }
 
   // Add symbol
-  returnValue.symbolTable.push_back(
-      {name, type, static_cast<uint16_t>(returnValue.symbolTable.size() * 4),
-       false});
+  returnValue.symbolTable.push_back({name, type, newAddress, false});
 }
 
 std::string Assembler::removeBeginningSpacesAndComment(std::string &input) {
