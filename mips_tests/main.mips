@@ -1,0 +1,18 @@
+.data
+
+KEY:      .word 0
+CLEARTXT  .space 48
+NUM:      .word 0
+
+.text
+
+.globl MAIN
+.globl MAINEND
+.globl NUM
+
+MAIN:     add $v0, $zero, $zero
+          lw  $a0, KEY
+          beq $a0, $zero, MAINEND
+          lw  $a1, CLEARTXT
+          jal ENCRYPT
+MAINEND:  sw  $v0, NUM

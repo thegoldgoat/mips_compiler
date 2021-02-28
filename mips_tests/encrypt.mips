@@ -1,0 +1,12 @@
+.data
+.text
+.globl ENCRYPT
+ENCRYPT:  lw $v0, NUM
+LOOP:     lw $t0, ($a1)
+          add $t0, $t0, $a0
+          sw $t0, ($a1)
+          beq $t0, $zero, MAINEND
+          addiu $a1, $a1, 4
+          addi $v0, $v0, -1
+          bne $v0, $zero, LOOP
+          jr $ra
