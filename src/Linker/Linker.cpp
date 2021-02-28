@@ -1,11 +1,16 @@
 #include "Linker.hpp"
 
+#include <assert.h>
 #include <stdio.h>
 
 Linker::Linker() {}
 
 void Linker::link(std::vector<std::string> &inputFiles) {
   for (auto iterator : inputFiles) {
+    // Update segments base (needed for relocation and symbol table)
+    dataSegmentBase = dataSegment.size() * 4;
+    textSegmentBase = textSegment.size() * 4;
+
     fileObjects.push_back(parseObjectFile(iterator));
   }
 
@@ -48,16 +53,25 @@ ParsedObject Linker::parseObjectFile(std::string &fileName) {
 
   // Read Symbol Table
   Symbol tempSymbol;
+  SymbolForMap tempSymbolForMap;
   for (int i = 0; i < header.symbolTableSize; i++) {
     std::getline(inputFile, tempSymbol.name, '\0');
     inputFile.read((char *)&tempSymbol.address, sizeof(tempSymbol.address));
     inputFile.read((char *)&tempSymbol.type, sizeof(tempSymbol.type));
     inputFile.read((char *)&tempSymbol.isGlobal, sizeof(tempSymbol.isGlobal));
 
-    if (tempSymbol.isGlobal)
-      globalSymbols[tempSymbol.name] = {tempSymbol.type, tempSymbol.address};
+    assert(tempSymbol.type != SYMBOL_NONE);
+
+    tempSymbolForMap.type = tempSymbol.type;
+    if (tempSymbol.type == SYMBOL_DATA)
+      tempSymbolForMap.address = tempSymbol.address + dataSegmentBase;
     else
-      localSymbols[tempSymbol.name] = {tempSymbol.type, tempSymbol.address};
+      tempSymbolForMap.address = tempSymbol.address + textSegmentBase;
+
+    if (tempSymbol.isGlobal)
+      globalSymbols[tempSymbol.name] = tempSymbolForMap;
+    else
+      localSymbols[tempSymbol.name] = tempSymbolForMap;
   }
 
   // Read Relocation Table
@@ -68,6 +82,9 @@ ParsedObject Linker::parseObjectFile(std::string &fileName) {
                    sizeof(tempRelocation.address));
     inputFile.read((char *)&tempRelocation.opCode,
                    sizeof(tempRelocation.opCode));
+
+    tempRelocation.address += textSegmentBase;
+
     relocationTable.push_back(tempRelocation);
   }
 

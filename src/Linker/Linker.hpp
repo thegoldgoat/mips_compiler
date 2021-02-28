@@ -24,4 +24,7 @@ private:
 
   std::vector<uint32_t> textSegment;
   std::vector<uint32_t> dataSegment;
+
+  uint32_t textSegmentBase;
+  uint32_t dataSegmentBase;
 };
