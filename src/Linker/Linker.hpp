@@ -18,6 +18,8 @@ public:
 private:
   ParsedObject parseObjectFile(std::string &fileName);
 
+  void doRelocation(Relocation &relocation);
+
   std::vector<ParsedObject> fileObjects;
 
   std::map<std::string, SymbolForMap> globalSymbols;

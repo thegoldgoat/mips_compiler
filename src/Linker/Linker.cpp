@@ -14,7 +14,17 @@ void Linker::link(std::vector<std::string> &inputFiles) {
     fileObjects.push_back(parseObjectFile(iterator));
   }
 
+  for (auto &iterator : fileObjects) {
+    for (auto &currentRelocation : iterator.relocationTable) {
+      doRelocation(currentRelocation);
+    }
+  }
+
   return;
+}
+
+void Linker::doRelocation(Relocation &relocation) {
+  // TODO: Do the relocation based on the type of instruction
 }
 
 ParsedObject Linker::parseObjectFile(std::string &fileName) {
@@ -33,11 +43,6 @@ ParsedObject Linker::parseObjectFile(std::string &fileName) {
 
   // Read Header
   inputFile.read((char *)&header, sizeof(ObjectHeader));
-
-  printf("[DEBUG]: textSize = %08x; dataSize = %08x; symbolTableSize = %08x; "
-         "relocationTableSize = %08x\n",
-         header.textSegmentSize, header.dataSegmentSize, header.symbolTableSize,
-         header.relocationTableSize);
 
   // Read Text Segment
   for (int i = 0; i < header.textSegmentSize; i++) {
