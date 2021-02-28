@@ -4,14 +4,22 @@
 
 Linker::Linker() {}
 
-void Linker::link(std::vector<std::istream *> &inputFiles) {
-  for (auto iterator : inputFiles)
-    this->fileObjects.push_back(parseObjectFile(*iterator));
+void Linker::link(std::vector<std::string> &inputFiles) {
+  for (auto iterator : inputFiles) {
+    fileObjects.push_back(parseObjectFile(iterator));
+  }
 
   return;
 }
 
-ParsedObject Linker::parseObjectFile(std::istream &inputFile) {
+ParsedObject Linker::parseObjectFile(std::string &fileName) {
+
+  std::ifstream inputFile(fileName);
+  if (!inputFile.is_open()) {
+    perror("Couldn't open file");
+    throw std::runtime_error("Couldn't open file");
+  }
+
   std::map<std::string, SymbolForMap> localSymbols;
   std::vector<Relocation> relocationTable;
 
@@ -20,6 +28,11 @@ ParsedObject Linker::parseObjectFile(std::istream &inputFile) {
 
   // Read Header
   inputFile.read((char *)&header, sizeof(ObjectHeader));
+
+  printf("[DEBUG]: textSize = %08x; dataSize = %08x; symbolTableSize = %08x; "
+         "relocationTableSize = %08x\n",
+         header.textSegmentSize, header.dataSegmentSize, header.symbolTableSize,
+         header.relocationTableSize);
 
   // Read Text Segment
   for (int i = 0; i < header.textSegmentSize; i++) {

@@ -21,20 +21,12 @@ int main(int argc, char **argv) {
     return -1;
   }
 
-  std::vector<std::istream *> inputFiles;
+  std::vector<std::string> inputFiles;
 
   for (int i = 3; i < argc; i++) {
-    std::ifstream inputFile(argv[i]);
-
-    if (!inputFile.is_open()) {
-      std::cerr << "Couldn't open input file " << argv[i];
-      perror(argv[i]);
-      return -1;
-    }
-    inputFiles.push_back(new std::ifstream);
+    inputFiles.push_back(argv[i]);
   }
 
   Linker linker;
-
   linker.link(inputFiles);
 }

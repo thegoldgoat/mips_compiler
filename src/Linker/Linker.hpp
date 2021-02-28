@@ -13,10 +13,10 @@ class Linker {
 public:
   Linker();
 
-  void link(std::vector<std::istream *> &inputFiles);
+  void link(std::vector<std::string> &inputFiles);
 
 private:
-  ParsedObject parseObjectFile(std::istream &inputFile);
+  ParsedObject parseObjectFile(std::string &fileName);
 
   std::vector<ParsedObject> fileObjects;
 
