@@ -1,5 +1,7 @@
 #include "Linker.hpp"
 
+#include <stdio.h>
+
 Linker::Linker() {}
 
 void Linker::link(std::vector<std::istream *> &inputFiles) {
@@ -44,7 +46,8 @@ FileObject Linker::parseObjectFile(std::istream &inputFile) {
   Relocation tempRelocation;
   for (int i = 0; i < header.symbolTableSize; i++) {
     std::getline(inputFile, tempRelocation.symbolName, '\0');
-    inputFile.read((char *)&tempSymbol.address, sizeof(tempSymbol.address));
+    inputFile.read((char *)&tempRelocation.address,
+                   sizeof(tempRelocation.address));
     inputFile.read((char *)&tempRelocation.opCode,
                    sizeof(tempRelocation.opCode));
     returnValue.relocationTable.push_back(tempRelocation);

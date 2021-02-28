@@ -507,13 +507,13 @@ void Assembler::outputToFile(std::ostream &outFile, FileObject &fileObject) {
     outFile.write((char *)iterator.name.c_str(), iterator.name.size() + 1);
 
     // Write address
-    outFile.write((char *)&iterator.address, sizeof(uint32_t));
+    outFile.write((char *)&iterator.address, sizeof(iterator.address));
 
     // Write type
-    outFile.write((char *)&iterator.type, sizeof(SymbolType));
+    outFile.write((char *)&iterator.type, sizeof(iterator.type));
 
     // Write isGlobal
-    outFile.write((char *)&iterator.isGlobal, sizeof(bool));
+    outFile.write((char *)&iterator.isGlobal, sizeof(iterator.isGlobal));
   }
 
   // * relocation table
@@ -523,9 +523,9 @@ void Assembler::outputToFile(std::ostream &outFile, FileObject &fileObject) {
                   iterator.symbolName.size() + 1);
 
     // Write address
-    outFile.write((char *)&iterator.address, sizeof(uint32_t));
+    outFile.write((char *)&iterator.address, sizeof(iterator.address));
 
-    // Write type
-    outFile.write((char *)&iterator.opCode, sizeof(uint8_t));
+    // Write opCode
+    outFile.write((char *)&iterator.opCode, sizeof(iterator.opCode));
   }
 }
