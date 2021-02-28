@@ -1,7 +1,13 @@
 project('mips_emulator', 'cpp')
-executable('main', 'src/main.cpp', \
+executable('assemble', 'src/assemble.cpp', \
     'src/Assembler/Assembler.cpp', \
     'src/Assembler/Utils.cpp',     \
     'src/Common/Symbol.cpp',     \
+    install: true
+)
+
+executable('link', 'src/link.cpp',  \
+    'src/Linker/Linker.cpp',        \
+    'src/Common/Symbol.cpp',        \
     install: true
 )

@@ -8,7 +8,7 @@
 #include "../Common/ObjectStructs.hpp"
 #include "../Common/Relocation.hpp"
 #include "../Common/Symbol.hpp"
-#include "Utils.h"
+#include "Utils.hpp"
 
 enum Section { TEXT, DATA, NONE };
 
