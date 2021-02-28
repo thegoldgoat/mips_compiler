@@ -4,10 +4,25 @@
 #include <iostream>
 #include <string.h>
 
-int main() {
-  std::ifstream inputFile("/home/andrea/Documenti/test.mips");
+int main(int argc, char **argv) {
+
+  std::cout << "argc = " << argc << std::endl;
+  if (argc < 3 || argc > 4) {
+    std::cerr << "Usage: " << argv[0]
+              << " <input_path> <output_path> [--verbose]" << std::endl;
+    return -1;
+  }
+
+  std::ifstream inputFile(argv[1]);
   if (!inputFile.is_open()) {
     perror("Error while opening input file");
+    return -1;
+  }
+
+  std::ofstream outFile(argv[2], std::ios::binary);
+
+  if (!outFile.is_open()) {
+    perror("Error while opening output file");
     return -1;
   }
 
@@ -17,15 +32,11 @@ int main() {
 
   inputFile.close();
 
-  assembler.prettyPrintObject();
-  std::ofstream outFile("/tmp/canex", std::ios::binary);
+  if (argc == 4 && strcmp(argv[3], "--verbose") == 0) {
+    assembler.prettyPrintObject();
+  }
 
   FileObject outObj = assembler.getObject();
-
-  if (!outFile.is_open()) {
-    perror("Error while opening output file");
-    return -1;
-  }
 
   Assembler::outputToFile(outFile, outObj);
 
