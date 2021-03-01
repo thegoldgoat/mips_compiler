@@ -11,13 +11,19 @@ struct ParsedObject {
   std::vector<Relocation> relocationTable;
 };
 
+struct ExeHeader {
+  uint32_t textSegmentSize;
+  uint32_t dataSegmentSize;
+  uint32_t entryPointOffset;
+};
+
 class Linker {
 public:
   Linker();
 
   void link(std::vector<std::string> &inputFiles);
 
-  void prettyPrintExecutable();
+  void outputToFile(std::string path);
 
 private:
   ParsedObject parseObjectFile(std::string &fileName);

@@ -151,5 +151,31 @@ ParsedObject Linker::parseObjectFile(std::string &fileName) {
     relocationTable.push_back(tempRelocation);
   }
 
+  inputFile.close();
+
   return {localSymbols, relocationTable};
+}
+
+void Linker::outputToFile(std::string path) {
+
+  std::ofstream outputFile(path);
+
+  if (!outputFile.is_open()) {
+    perror("Couln't open output file");
+    throw std::runtime_error("");
+  }
+
+  ExeHeader header = {static_cast<uint32_t>(textSegment.size()),
+                      static_cast<uint32_t>(dataSegment.size()),
+                      globalSymbols.find("MAIN")->second.address};
+
+  outputFile.write((char *)&header, sizeof(header));
+
+  for (uint32_t &it : textSegment)
+    outputFile.write((char *)&it, sizeof(it));
+
+  for (uint32_t &it : dataSegment)
+    outputFile.write((char *)&it, sizeof(it));
+
+  outputFile.close();
 }

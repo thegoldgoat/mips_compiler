@@ -29,4 +29,6 @@ int main(int argc, char **argv) {
 
   Linker linker;
   linker.link(inputFiles);
+
+  linker.outputToFile(argv[2]);
 }
