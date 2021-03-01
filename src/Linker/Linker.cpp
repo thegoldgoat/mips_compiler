@@ -72,7 +72,7 @@ void Linker::doRelocation(Relocation &relocation,
   case BGTZ:
   case BLTZ:
     textSegment.at(relocation.address / 4) |=
-        ((symbolForMap.address - relocation.address + 4) / 4) & 0x0000ffff;
+        ((symbolForMap.address - relocation.address - 4) / 4) & 0x0000ffff;
     break;
   case J:
   case JAL:
