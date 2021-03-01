@@ -34,3 +34,7 @@ Run `assemble` or `link` to see CLI parameters:
 
 Usage: assemble <input_path> <output_path> [--verbose]
 Usage: link -o <output_path> <input_file1> <input_file2> [...]
+
+## License
+
+see LICENSE
