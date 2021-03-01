@@ -6,7 +6,6 @@
 
 int main(int argc, char **argv) {
 
-  std::cout << "argc = " << argc << std::endl;
   if (argc < 3 || argc > 4) {
     std::cerr << "Usage: " << argv[0]
               << " <input_path> <output_path> [--verbose]" << std::endl;
