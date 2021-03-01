@@ -17,6 +17,8 @@ public:
 
   void link(std::vector<std::string> &inputFiles);
 
+  void prettyPrintExecutable();
+
 private:
   ParsedObject parseObjectFile(std::string &fileName);
 

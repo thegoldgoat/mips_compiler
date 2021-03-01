@@ -17,6 +17,15 @@ void Linker::link(std::vector<std::string> &inputFiles) {
     fileObjects.push_back(parseObjectFile(iterator));
   }
 
+  // Check that there is a global text symbol named 'MAIN':
+  auto result = globalSymbols.find("MAIN");
+
+  if (result == globalSymbols.end())
+    throw std::runtime_error("Missing MAIN symbol for entry point");
+
+  if (result->second.type != SYMBOL_TEXT)
+    throw std::runtime_error("MAIN is not a TEXT symbol");
+
   for (auto &iterator : fileObjects) {
     for (auto &currentRelocation : iterator.relocationTable) {
       doRelocation(currentRelocation, iterator.localSymbols);
@@ -32,12 +41,12 @@ void Linker::doRelocation(Relocation &relocation,
 
   SymbolForMap symbolForMap;
 
-  auto result = globalSymbols.find(relocation.symbolName);
+  auto result = localSymbols.find(relocation.symbolName);
 
-  if (result == globalSymbols.end()) {
-    result = localSymbols.find(relocation.symbolName);
+  if (result == localSymbols.end()) {
+    result = globalSymbols.find(relocation.symbolName);
 
-    if (result == localSymbols.end()) {
+    if (result == globalSymbols.end()) {
       throw std::runtime_error("Symbol not found: " + relocation.symbolName);
     }
   }
