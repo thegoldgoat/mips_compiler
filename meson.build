@@ -9,5 +9,6 @@ executable('assemble', 'src/assemble.cpp', \
 executable('link', 'src/link.cpp',  \
     'src/Linker/Linker.cpp',        \
     'src/Common/Symbol.cpp',        \
+    'src/Linker/Utils.cpp',         \
     install: true
 )

@@ -4,6 +4,8 @@
 #include <map>
 #include <vector>
 
+#define GLOBAL_POINTER 0x10008000
+
 struct ParsedObject {
   std::map<std::string, SymbolForMap> localSymbols;
   std::vector<Relocation> relocationTable;
@@ -18,7 +20,8 @@ public:
 private:
   ParsedObject parseObjectFile(std::string &fileName);
 
-  void doRelocation(Relocation &relocation);
+  void doRelocation(Relocation &relocation,
+                    std::map<std::string, SymbolForMap> &localSymbols);
 
   std::vector<ParsedObject> fileObjects;
 

@@ -2,6 +2,9 @@
 
 #include <assert.h>
 #include <stdio.h>
+#include <string>
+
+#include "Utils.hpp"
 
 Linker::Linker() {}
 
@@ -16,15 +19,61 @@ void Linker::link(std::vector<std::string> &inputFiles) {
 
   for (auto &iterator : fileObjects) {
     for (auto &currentRelocation : iterator.relocationTable) {
-      doRelocation(currentRelocation);
+      doRelocation(currentRelocation, iterator.localSymbols);
     }
   }
 
   return;
 }
 
-void Linker::doRelocation(Relocation &relocation) {
-  // TODO: Do the relocation based on the type of instruction
+void Linker::doRelocation(Relocation &relocation,
+                          std::map<std::string, SymbolForMap> &localSymbols) {
+  // Do the relocation based on the type of instruction
+
+  SymbolForMap symbolForMap;
+
+  auto result = globalSymbols.find(relocation.symbolName);
+
+  if (result == globalSymbols.end()) {
+    result = localSymbols.find(relocation.symbolName);
+
+    if (result == localSymbols.end()) {
+      throw std::runtime_error("Symbol not found: " + relocation.symbolName);
+    }
+  }
+
+  symbolForMap = result->second;
+
+  switch (getInstructionFromOpCode(relocation.opCode)) {
+  case LW:
+  case SW:
+  case LBU:
+  case LB:
+  case SB:
+    // Write in the offset address - $gp
+    textSegment.at(relocation.address / 4) |=
+        symbolForMap.address - GLOBAL_POINTER;
+    break;
+  case LUI:
+    textSegment.at(relocation.address / 4) |= symbolForMap.address;
+    break;
+  case BEQ:
+  case BNE:
+  case BLEZ:
+  case BGTZ:
+  case BLTZ:
+    textSegment.at(relocation.address / 4) |=
+        ((symbolForMap.address - relocation.address + 4) / 4) & 0x0000ffff;
+    break;
+  case J:
+  case JAL:
+    textSegment.at(relocation.address / 4) |= symbolForMap.address / 4;
+    break;
+  default:
+    throw std::runtime_error("Trying to relocate an unsupported instruction: " +
+                             std::to_string(relocation.opCode));
+    break;
+  }
 }
 
 ParsedObject Linker::parseObjectFile(std::string &fileName) {
