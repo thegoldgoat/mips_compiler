@@ -118,7 +118,7 @@ std::string Assembler::removeBeginningSpacesAndComment(std::string &input) {
 
 void Assembler::parseLine(std::string &line) {
   line = removeBeginningSpacesAndComment(line);
-  std::cout << "Parsing " << line << std::endl;
+  std::cout << "\tParsing " << line << std::endl;
 
   if (line[0] == '.') {
     // Section or other special keywords
@@ -292,7 +292,7 @@ void Assembler::populateInstructionWithOperands(
     case XORI:
       *instruction |= getRegisterNumberFromString(operands.at(1)) << 21;
       *instruction |= getRegisterNumberFromString(operands.at(0)) << 16;
-      *instruction |= getImmediate16Bit(operands.at(2), false);
+      *instruction |= getImmediate16Bit(operands.at(2), opCode, false);
       break;
     case BEQ:
     case BNE:
@@ -300,7 +300,7 @@ void Assembler::populateInstructionWithOperands(
       // Immediate
       *instruction |= getRegisterNumberFromString(operands.at(1)) << 21;
       *instruction |= getRegisterNumberFromString(operands.at(0)) << 16;
-      *instruction |= getImmediate16Bit(operands.at(2), true);
+      *instruction |= getImmediate16Bit(operands.at(2), opCode, true);
       break;
     case LW:
     case SW:
@@ -313,21 +313,21 @@ void Assembler::populateInstructionWithOperands(
       *instruction |= getRegisterNumberFromString(operands.at(0)) << 16;
       *instruction |= getRegisterNumberFromString(offsetAndRegister->second)
                       << 21;
-      *instruction |= getImmediate16Bit(offsetAndRegister->first, true);
+      *instruction |= getImmediate16Bit(offsetAndRegister->first, opCode, true);
 
       delete offsetAndRegister;
       break;
     case LUI:
       // Syntax: Rt, Immediate with order in memory as 00000, rt, Immediate
       *instruction |= getRegisterNumberFromString(operands.at(0)) << 16;
-      *instruction |= getImmediate16Bit(operands.at(1), false);
+      *instruction |= getImmediate16Bit(operands.at(1), opCode, false);
       break;
     case BLEZ:
     case BGTZ:
     case BLTZ:
       // Syntax: Rs, offset with order in memory as rs, 00000, offset
       *instruction |= getRegisterNumberFromString(operands.at(0)) << 21;
-      *instruction |= getImmediate16Bit(operands.at(1), true);
+      *instruction |= getImmediate16Bit(operands.at(1), opCode, true);
       break;
     case J:
     case JAL:
@@ -425,8 +425,12 @@ void Assembler::populateInstructionWithOperands(
 
 #define OUT_OF_16_BIT(value) value >= 32768 || value < -32768
 
-uint32_t Assembler::getImmediate16Bit(std::string &string, bool canBeSymbol) {
-  int32_t result = getImmediateFromString(string, 0, canBeSymbol);
+uint32_t Assembler::getImmediate16Bit(std::string &string, uint8_t opCode,
+                                      bool canBeSymbol) {
+  printf("[DEBUG10]: string = %s; opCode = %02x; canBeSymbol = %x\n",
+         string.c_str(), opCode, canBeSymbol);
+
+  int32_t result = getImmediateFromString(string, opCode, canBeSymbol);
   if (OUT_OF_16_BIT(result))
     throw std::out_of_range("Immediate out of range: " + string);
 

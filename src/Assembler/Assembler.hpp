@@ -58,7 +58,8 @@ private:
   int32_t getImmediateFromString(std::string &string, uint8_t opCode,
                                  bool canBeSymbol);
 
-  uint32_t getImmediate16Bit(std::string &string, bool canBeSymbol);
+  uint32_t getImmediate16Bit(std::string &string, uint8_t opCode,
+                             bool canBeSymbol);
 
   uint32_t getImmediate24Bit(std::string &string, uint8_t opCode);
 };
