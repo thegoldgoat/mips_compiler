@@ -61,7 +61,7 @@ void Linker::doRelocation(Relocation &relocation,
   case SB:
     // Write in the offset address - $gp
     textSegment.at(relocation.address / 4) |=
-        symbolForMap.address - GLOBAL_POINTER;
+        (symbolForMap.address - GLOBAL_POINTER) & 0x0000ffff;
     break;
   case LUI:
     textSegment.at(relocation.address / 4) |= symbolForMap.address;
