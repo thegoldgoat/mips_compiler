@@ -54,7 +54,8 @@ void Assembler::makeSymbolGlobal(std::string &symbolName) {
 void Assembler::addNewSymbol(std::string name, SymbolType type) {
   assert(type != SYMBOL_NONE);
 
-  std::cout << "[Symbol]: name = " << name << " type = " << type << std::endl;
+  std::cout << "[Symbol]: name = " << name << " type = " << std::hex << type
+            << std::endl;
 
   uint16_t newAddress;
   if (type == SYMBOL_TEXT)
@@ -187,6 +188,8 @@ void Assembler::instructionLine(std::string &line) {
         parseWord(stringStream);
       } else if (stringBuffer == ".space") {
         parseSpace(stringStream);
+      } else {
+        throw std::runtime_error("Invalid variable type: " + stringBuffer);
       }
       break;
     case TEXT:
