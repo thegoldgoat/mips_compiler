@@ -40,5 +40,7 @@ enum InstructionsAvailable {
   NOP,
   MFHI,
   MFLO,
-  SYSCALL_INST
+  SYSCALL_INST,
+  SRL,
+  SLL
 };

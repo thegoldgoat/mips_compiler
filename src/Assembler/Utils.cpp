@@ -58,7 +58,7 @@ InstructionsAvailable resolveInstruction(std::string &instruction) {
       {"jr", JR},     {"jalr", JALR},
       {"nop", NOP},   {"mfhi", MFHI},
       {"mflo", MFLO}, {"syscall", SYSCALL_INST},
-  };
+      {"srl", SRL},   {"sll", SLL}};
 
   auto result = instructionMap.find(instruction);
   if (result == instructionMap.end())
@@ -89,6 +89,8 @@ uint8_t getOpCode(InstructionsAvailable &instruction) {
   case MFHI:
   case MFLO:
   case SYSCALL_INST:
+  case SRL:
+  case SLL:
     return 0;
     break;
   case ADDI:

@@ -280,6 +280,12 @@ void Assembler::populateInstructionWithOperands(
       *instruction |= getRegisterNumberFromString(operands.at(2)) << 16;
       *instruction |= getRegisterNumberFromString(operands.at(0)) << 11;
       break;
+    case SLL:
+    case SRL:
+      *instruction |= getRegisterNumberFromString(operands.at(0)) << 11;
+      *instruction |= getRegisterNumberFromString(operands.at(1)) << 16;
+      *instruction |= getImmediate5Bit(operands.at(2));
+      break;
     case MULT:
     case MULTU:
     case DIV:
@@ -419,6 +425,12 @@ void Assembler::populateInstructionWithOperands(
     case SYSCALL_INST:
       SET_FUNCT(*instruction, 12);
       break;
+    case SLL:
+      SET_FUNCT(*instruction, 0);
+      break;
+    case SRL:
+      SET_FUNCT(*instruction, 2);
+      break;
     default:
       break;
     }
@@ -426,6 +438,14 @@ void Assembler::populateInstructionWithOperands(
     throw std::runtime_error(std::string("Missing operand: ") +
                              exception.what());
   }
+}
+
+uint8_t Assembler::getImmediate5Bit(std::string &string) {
+  int32_t result = getImmediateFromString(string, 0, false);
+  if (result > 32 || result < 0)
+    throw std::out_of_range("Immediate out of range: " + string);
+
+  return result;
 }
 
 #define OUT_OF_16_BIT(value) value >= 32768 || value < -32768
@@ -446,7 +466,7 @@ uint32_t Assembler::getImmediate16Bit(std::string &string, uint8_t opCode,
 
 uint32_t Assembler::getImmediate24Bit(std::string &string, uint8_t opCode) {
   int32_t result = getImmediateFromString(string, opCode, true);
-  if (OUT_OF_26_BIT(result))
+  if (OUT_OF_26_BIT(result) || result < 0)
     throw std::out_of_range("Immediate out of range: " + string);
 
   return result;
