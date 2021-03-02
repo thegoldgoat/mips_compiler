@@ -1,0 +1,38 @@
+; Calculate the sum of an array
+.text
+
+;	$a0 should be the pointer to the start of the array
+;	$a1 should be the size of the array 
+;	$v0 is the sum of all the elements of the array
+
+.globl GETSUM
+
+GETSUM:
+
+;	Two integers local variables, one for the return value and one
+;	for the iterator: need to back up $s0 and $s1 to the stack
+
+	addiu $sp, $sp, -8
+
+	sw $s0, 4($sp)
+	sw $s1, 0($sp)
+
+	add $s0, $zero, $zero	; Set the return value to zero
+	add $s1, $zero, $zero	; Set the iterator to zero
+
+FOR:	beq $s1, $a1, END_FOR	; Branch if iterator = size
+	srl $t0, $s1, 2		; Multiply iterator by 4 aka shift right 2 bit
+	add $t0, $t0, $a1	; Add this array offset to the array base address
+	lw $t1, ($t0)		; Load the array value in $t1
+	add $s0, $s0, $t1	; Add the array value in the return value
+	addi $s1, $s1, 1	; Increment iterator
+	j FOR
+END_FOR:
+	add $v0, $s0, $zero	; Set return value
+
+	lw $s0, 4($sp)
+	lw $s1, 0($sp)
+	
+	addiu $sp, $sp, 8
+
+	jr $ra
