@@ -76,7 +76,8 @@ void Linker::doRelocation(Relocation &relocation,
     break;
   case J:
   case JAL:
-    textSegment.at(relocation.address / 4) |= symbolForMap.address / 4;
+    textSegment.at(relocation.address / 4) |=
+        (TEXT_SEGMENT_BEGIN + symbolForMap.address) / 4;
     break;
   default:
     throw std::runtime_error("Trying to relocate an unsupported instruction: " +
