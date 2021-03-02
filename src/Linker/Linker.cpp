@@ -139,7 +139,7 @@ ParsedObject Linker::parseObjectFile(std::string &fileName) {
 
   // Read Relocation Table
   Relocation tempRelocation;
-  for (int i = 0; i < header.symbolTableSize; i++) {
+  for (int i = 0; i < header.relocationTableSize; i++) {
     std::getline(inputFile, tempRelocation.symbolName, '\0');
     inputFile.read((char *)&tempRelocation.address,
                    sizeof(tempRelocation.address));
