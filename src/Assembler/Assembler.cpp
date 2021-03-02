@@ -90,9 +90,10 @@ std::string Assembler::removeBeginningSpacesAndComment(std::string &input) {
   int32_t spaceBeforeCommentCount = 0;
 
   for (auto iterator : input) {
-    if (iterator != ' ')
+    if (IS_SPACE_OR_TAB(iterator))
+      endSpaceIndex++;
+    else
       break;
-    endSpaceIndex++;
   }
 
   int inputSize = input.size();
@@ -101,9 +102,10 @@ std::string Assembler::removeBeginningSpacesAndComment(std::string &input) {
     if (input[i] == ';') {
       commentIndex = i;
       for (i--; i > endSpaceIndex; i--) {
-        if (input[i] != ' ')
+        if (IS_SPACE_OR_TAB(input[i]))
+          spaceBeforeCommentCount++;
+        else
           break;
-        spaceBeforeCommentCount++;
       }
       break;
     }
@@ -147,6 +149,9 @@ void Assembler::dotLine(std::string &line) {
               << std::endl;
 
     makeSymbolGlobal(stringBuffer);
+  } else {
+    throw std::runtime_error("Special dot word not recognized: " +
+                             stringBuffer);
   }
 }
 

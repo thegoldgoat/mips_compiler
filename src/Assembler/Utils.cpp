@@ -4,8 +4,6 @@
 #include <iostream>
 #include <map>
 
-#define IS_SPACE_OR_TAB(targetChar) targetChar == ' ' || targetChar == '\t'
-
 std::vector<std::string> getOperands(std::stringstream &ss) {
 
   std::vector<std::string> returnValue;

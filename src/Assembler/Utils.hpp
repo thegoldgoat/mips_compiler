@@ -1,5 +1,7 @@
 #pragma once
 
+#define IS_SPACE_OR_TAB(targetChar) targetChar == ' ' || targetChar == '\t'
+
 #include <sstream>
 #include <string>
 #include <vector>
