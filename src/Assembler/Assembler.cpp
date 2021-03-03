@@ -330,6 +330,8 @@ void Assembler::parsePseudoInstruction(std::string instructionCode,
   case NOT:
     break;
   case NOP:
+    tempOperands1.reset(new std::vector<std::string>({"$zero", "$zero", "0"}));
+    addRawInstruction(SLL, *tempOperands1);
     break;
   }
 }
