@@ -53,6 +53,7 @@ void Linker::doRelocation(Relocation &relocation,
 
   symbolForMap = result->second;
 
+  // TODO: Check that the symbol type is 'correct' for the specific instruction
   switch (getInstructionFromOpCode(relocation.opCode)) {
   case LW:
   case SW:
@@ -63,8 +64,19 @@ void Linker::doRelocation(Relocation &relocation,
     textSegment.at(relocation.address / 4) |=
         (symbolForMap.address - GLOBAL_POINTER) & 0x0000ffff;
     break;
+  case ADDI:
+  case ADDIU:
+  case SLTI:
+  case SLTIU:
+  case ANDI:
+  case ORI:
+  case XORI:
+    textSegment.at(relocation.address / 4) |=
+        (DATA_SEGMENT_BEGIN + symbolForMap.address) & 0x0000ffff;
+    break;
   case LUI:
-    textSegment.at(relocation.address / 4) |= symbolForMap.address;
+    textSegment.at(relocation.address / 4) |=
+        (DATA_SEGMENT_BEGIN + symbolForMap.address) >> 16;
     break;
   case BEQ:
   case BNE:

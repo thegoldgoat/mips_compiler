@@ -6,6 +6,7 @@
 
 #define GLOBAL_POINTER 0x10008000
 #define TEXT_SEGMENT_BEGIN 0x00400000
+#define DATA_SEGMENT_BEGIN 0x10000000
 
 struct ParsedObject {
   std::map<std::string, SymbolForMap> localSymbols;
