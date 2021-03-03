@@ -21,8 +21,8 @@ GETSUM:
 	add $s1, $zero, $zero	; Set the iterator to zero
 
 FOR:	beq $s1, $a1, END_FOR	; Branch if iterator = size
-	srl $t0, $s1, 2		; Multiply iterator by 4 aka shift right 2 bit
-	add $t0, $t0, $a1	; Add this array offset to the array base address
+	sll $t0, $s1, 2		; Multiply iterator by 4 aka shift right 2 bit
+	add $t0, $t0, $a0	; Add this array offset to the array base address
 	lw $t1, ($t0)		; Load the array value in $t1
 	add $s0, $s0, $t1	; Add the array value in the return value
 	addi $s1, $s1, 1	; Increment iterator
