@@ -38,27 +38,20 @@ std::vector<std::string> getOperands(std::stringstream &ss) {
 
 InstructionsAvailable resolveInstruction(std::string &instruction) {
   static const std::map<std::string, InstructionsAvailable> instructionMap{
-      {"add", ADD},   {"addu", ADDU},
-      {"sub", SUB},   {"subu", SUBU},
-      {"mult", MULT}, {"multu", MULTU},
-      {"div", DIV},   {"divu", DIVU},
-      {"slt", SLT},   {"sltu", SLTU},
-      {"and", AND},   {"or", OR},
-      {"nor", NOR},   {"xor", XOR},
-      {"addi", ADDI}, {"addiu", ADDIU},
-      {"slti", SLTI}, {"sltiu", SLTIU},
-      {"andi", ANDI}, {"ori", ORI},
-      {"xori", XORI}, {"lw", LW},
-      {"sw", SW},     {"lbu", LBU},
-      {"lb", LB},     {"sb", SB},
-      {"lui", LUI},   {"beq", BEQ},
-      {"bne", BNE},   {"blez", BLEZ},
-      {"bgtz", BGTZ}, {"bltz", BLTZ},
-      {"j", J},       {"jal", JAL},
-      {"jr", JR},     {"jalr", JALR},
-      {"nop", NOP},   {"mfhi", MFHI},
-      {"mflo", MFLO}, {"syscall", SYSCALL_INST},
-      {"srl", SRL},   {"sll", SLL}};
+      {"add", ADD},     {"addu", ADDU}, {"sub", SUB},
+      {"subu", SUBU},   {"mult", MULT}, {"multu", MULTU},
+      {"div", DIV},     {"divu", DIVU}, {"slt", SLT},
+      {"sltu", SLTU},   {"and", AND},   {"or", OR},
+      {"nor", NOR},     {"xor", XOR},   {"addi", ADDI},
+      {"addiu", ADDIU}, {"slti", SLTI}, {"sltiu", SLTIU},
+      {"andi", ANDI},   {"ori", ORI},   {"xori", XORI},
+      {"lw", LW},       {"sw", SW},     {"lbu", LBU},
+      {"lb", LB},       {"sb", SB},     {"lui", LUI},
+      {"beq", BEQ},     {"bne", BNE},   {"blez", BLEZ},
+      {"bgtz", BGTZ},   {"bltz", BLTZ}, {"j", J},
+      {"jal", JAL},     {"jr", JR},     {"jalr", JALR},
+      {"mfhi", MFHI},   {"mflo", MFLO}, {"syscall", SYSCALL_INST},
+      {"srl", SRL},     {"sll", SLL}};
 
   auto result = instructionMap.find(instruction);
   if (result == instructionMap.end())
@@ -85,7 +78,6 @@ uint8_t getOpCode(InstructionsAvailable &instruction) {
   case XOR:
   case JR:
   case JALR:
-  case NOP:
   case MFHI:
   case MFLO:
   case SYSCALL_INST:

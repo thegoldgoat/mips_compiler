@@ -37,7 +37,6 @@ enum InstructionsAvailable {
   JAL,
   JR,
   JALR,
-  NOP,
   MFHI,
   MFLO,
   SYSCALL_INST,

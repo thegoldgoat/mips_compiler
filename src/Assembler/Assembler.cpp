@@ -237,23 +237,100 @@ void Assembler::parseInstruction(std::string instructionCode,
                                  std::stringstream &ss) {
   assert(currentSection == TEXT);
 
-  std::cout << "[DEBUG]: Instruction code: " << instructionCode << std::endl;
-
-  uint32_t totalInstruction = 0;
-  InstructionsAvailable instructionEnum = resolveInstruction(instructionCode);
-
-  uint8_t opCode = getOpCode(instructionEnum);
-  totalInstruction |= opCode << 26;
+  InstructionsAvailable instructionEnum;
 
   auto operands = getOperands(ss);
 
+  try {
+    instructionEnum = resolveInstruction(instructionCode);
+  } catch (std::runtime_error &) {
+    // Try to see if it is a pseudo instruction
+    parsePseudoInstruction(instructionCode, operands);
+  }
+
+  addRawInstruction(instructionEnum, operands);
+}
+
+void Assembler::addRawInstruction(InstructionsAvailable instruction,
+                                  std::vector<std::string> &operands) {
+  uint32_t totalInstruction = 0;
+
+  uint8_t opCode = getOpCode(instruction);
+  totalInstruction |= opCode << 26;
+
   populateInstructionWithOperands(operands, &totalInstruction, opCode,
-                                  instructionEnum);
+                                  instruction);
 
   if (returnValue.textSegment.size() > MAX_TEXT_SEGMENT_SIZE)
     throw std::runtime_error("Data segment size exceeded");
 
   returnValue.textSegment.push_back(totalInstruction);
+}
+
+void Assembler::parsePseudoInstruction(std::string instructionCode,
+                                       std::vector<std::string> &operands) {
+  PseudoInstructions pseudoInstructionEnum =
+      resolvePseudoInstruction(instructionCode);
+
+  std::unique_ptr<std::vector<std::string>> tempOperands1;
+  std::unique_ptr<std::vector<std::string>> tempOperands2;
+
+  uint32_t tempImmediate;
+
+  switch (pseudoInstructionEnum) {
+  case MOVE:
+    // move $x, $y => or $x, $y, $zero
+    if (operands.size() != 2)
+      throw std::runtime_error("Invalid operands for 'move' instruction");
+    operands.push_back("$zero");
+    addRawInstruction(OR, operands);
+    break;
+  case CLEAR:
+    // clear $x => or $x, $zero, $zero
+    if (operands.size() != 1)
+      throw std::runtime_error("Invalid operands for 'clear' instruction");
+    operands.push_back("$zero");
+    operands.push_back("$zero");
+    addRawInstruction(OR, operands);
+    break;
+  case LOAD_IMMEDIATE:
+    // li $x, IMM =>
+    // 1. lui $x, IMM >> 16
+    // 2. ori $x, $x, IMM & 0x0000ffff
+
+    if (operands.size() != 2)
+      throw std::runtime_error("Invalid operands for 'li' instruction");
+
+    tempImmediate = std::stoi(operands[1]);
+
+    // * lui
+    tempOperands1.reset(new std::vector<std::string>(
+        {operands[0], std::to_string(tempImmediate >> 16)}));
+
+    addRawInstruction(LUI, *tempOperands1);
+
+    // * ori
+    tempOperands2.reset(new std::vector<std::string>(
+        {operands[0], operands[0],
+         std::to_string(tempImmediate & 0x0000ffff)}));
+
+    addRawInstruction(ORI, *tempOperands2);
+    break;
+  case LOAD_ADDRESS:
+    break;
+  case BRANCH_GREATER_THAN:
+    break;
+  case BRANCH_LESS_THAN:
+    break;
+  case BRANCH_GREATER_EQUAL:
+    break;
+  case BRANCH_LESS_EQUAL:
+    break;
+  case NOT:
+    break;
+  case NOP:
+    break;
+  }
 }
 
 #define SET_FUNCT(target, code) target |= code
@@ -357,10 +434,6 @@ void Assembler::populateInstructionWithOperands(
     case JR:
       // Syntax: Rs with order in memory as rs, 00000, 00000, 00000, 001000
       *instruction |= getRegisterNumberFromString(operands.at(0)) << 21;
-      break;
-    case NOP:
-      // All zeros
-      *instruction = 0;
       break;
     case MFHI:
     case MFLO:

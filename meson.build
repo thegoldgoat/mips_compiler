@@ -1,8 +1,9 @@
 project('mips_emulator', 'cpp')
 executable('assemble', 'src/assemble.cpp', \
-    'src/Assembler/Assembler.cpp', \
-    'src/Assembler/Utils.cpp',     \
-    'src/Common/Symbol.cpp',     \
+    'src/Assembler/Assembler.cpp',         \
+    'src/Assembler/Utils.cpp',             \
+    'src/Assembler/PseudoInstructions.cpp',\
+    'src/Common/Symbol.cpp',               \
     install: true
 )
 

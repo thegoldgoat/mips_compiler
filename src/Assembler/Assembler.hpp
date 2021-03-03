@@ -8,6 +8,7 @@
 #include "../Common/ObjectStructs.hpp"
 #include "../Common/Relocation.hpp"
 #include "../Common/Symbol.hpp"
+#include "PseudoInstructions.hpp"
 #include "Utils.hpp"
 
 enum Section { TEXT, DATA, NONE };
@@ -48,6 +49,11 @@ private:
 
   void parseWord(std::stringstream &ss);
   void parseInstruction(std::string instructionCode, std::stringstream &ss);
+  void addRawInstruction(InstructionsAvailable instruction,
+                         std::vector<std::string> &operands);
+
+  void parsePseudoInstruction(std::string instructionCode,
+                              std::vector<std::string> &operands);
 
   void parseSpace(std::stringstream &ss);
 
