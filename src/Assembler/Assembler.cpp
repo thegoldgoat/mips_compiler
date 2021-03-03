@@ -320,14 +320,19 @@ void Assembler::parsePseudoInstruction(std::string instructionCode,
     addRawInstruction(ORI, *tempOperands2);
     break;
   case BRANCH_GREATER_THAN:
+    throw std::runtime_error("Unimplemented pseudoinstruction");
     break;
   case BRANCH_LESS_THAN:
+    throw std::runtime_error("Unimplemented pseudoinstruction");
     break;
   case BRANCH_GREATER_EQUAL:
+    throw std::runtime_error("Unimplemented pseudoinstruction");
     break;
   case BRANCH_LESS_EQUAL:
+    throw std::runtime_error("Unimplemented pseudoinstruction");
     break;
   case NOT:
+    throw std::runtime_error("Unimplemented pseudoinstruction");
     break;
   case NOP:
     tempOperands1.reset(new std::vector<std::string>({"$zero", "$zero", "0"}));
