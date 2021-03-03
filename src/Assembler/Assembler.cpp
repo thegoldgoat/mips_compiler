@@ -306,7 +306,7 @@ void Assembler::populateInstructionWithOperands(
     case XORI:
       *instruction |= getRegisterNumberFromString(operands.at(1)) << 21;
       *instruction |= getRegisterNumberFromString(operands.at(0)) << 16;
-      *instruction |= getImmediate16Bit(operands.at(2), opCode, false);
+      *instruction |= getImmediate16Bit(operands.at(2), opCode);
       break;
     case BEQ:
     case BNE:
@@ -314,7 +314,7 @@ void Assembler::populateInstructionWithOperands(
       // Immediate
       *instruction |= getRegisterNumberFromString(operands.at(1)) << 21;
       *instruction |= getRegisterNumberFromString(operands.at(0)) << 16;
-      *instruction |= getImmediate16Bit(operands.at(2), opCode, true);
+      *instruction |= getImmediate16Bit(operands.at(2), opCode);
       break;
     case LW:
     case SW:
@@ -327,21 +327,21 @@ void Assembler::populateInstructionWithOperands(
       *instruction |= getRegisterNumberFromString(operands.at(0)) << 16;
       *instruction |= getRegisterNumberFromString(offsetAndRegister->second)
                       << 21;
-      *instruction |= getImmediate16Bit(offsetAndRegister->first, opCode, true);
+      *instruction |= getImmediate16Bit(offsetAndRegister->first, opCode);
 
       delete offsetAndRegister;
       break;
     case LUI:
       // Syntax: Rt, Immediate with order in memory as 00000, rt, Immediate
       *instruction |= getRegisterNumberFromString(operands.at(0)) << 16;
-      *instruction |= getImmediate16Bit(operands.at(1), opCode, false);
+      *instruction |= getImmediate16Bit(operands.at(1), opCode);
       break;
     case BLEZ:
     case BGTZ:
     case BLTZ:
       // Syntax: Rs, offset with order in memory as rs, 00000, offset
       *instruction |= getRegisterNumberFromString(operands.at(0)) << 21;
-      *instruction |= getImmediate16Bit(operands.at(1), opCode, true);
+      *instruction |= getImmediate16Bit(operands.at(1), opCode);
       break;
     case J:
     case JAL:
@@ -453,12 +453,8 @@ uint8_t Assembler::getImmediate5Bit(std::string &string) {
 
 #define OUT_OF_16_BIT(value) value >= 32768 || value < -32768
 
-uint32_t Assembler::getImmediate16Bit(std::string &string, uint8_t opCode,
-                                      bool canBeSymbol) {
-  printf("[DEBUG10]: string = %s; opCode = %02x; canBeSymbol = %x\n",
-         string.c_str(), opCode, canBeSymbol);
-
-  int32_t result = getImmediateFromString(string, opCode, canBeSymbol);
+uint32_t Assembler::getImmediate16Bit(std::string &string, uint8_t opCode) {
+  int32_t result = getImmediateFromString(string, opCode, true);
   if (OUT_OF_16_BIT(result))
     throw std::out_of_range("Immediate out of range: " + string);
 
