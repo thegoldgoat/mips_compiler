@@ -17,8 +17,8 @@ GETSUM:
 	sw $s0, 4($sp)
 	sw $s1, 0($sp)
 
-	add $s0, $zero, $zero	; Set the return value to zero
-	add $s1, $zero, $zero	; Set the iterator to zero
+	li $s0, 0	; Set the return value to zero
+	li $s1, 0	; Set the iterator to zero
 
 FOR:	beq $s1, $a1, END_FOR	; Branch if iterator = size
 	sll $t0, $s1, 2		; Multiply iterator by 4 aka shift right 2 bit
@@ -28,7 +28,7 @@ FOR:	beq $s1, $a1, END_FOR	; Branch if iterator = size
 	addi $s1, $s1, 1	; Increment iterator
 	j FOR
 END_FOR:
-	add $v0, $s0, $zero	; Set return value
+	move $v0, $s0	; Set return value
 
 	lw $s0, 4($sp)
 	lw $s1, 0($sp)

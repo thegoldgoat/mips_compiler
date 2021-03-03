@@ -8,8 +8,7 @@ ARRAY_SIZE:	.word  9
 .globl MAIN
 
 MAIN:
-	lui $a0, ARRAY
-	ori $a0, $a0, ARRAY
+	la $a0, ARRAY
 	lw $a1, ARRAY_SIZE
 
 	jal GETSUM

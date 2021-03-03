@@ -54,9 +54,6 @@ void Assembler::makeSymbolGlobal(std::string &symbolName) {
 void Assembler::addNewSymbol(std::string name, SymbolType type) {
   assert(type != SYMBOL_NONE);
 
-  std::cout << "[Symbol]: name = " << name << " type = " << std::hex << type
-            << std::endl;
-
   uint16_t newAddress;
   if (type == SYMBOL_TEXT)
     newAddress = returnValue.textSegment.size() * 4;
@@ -135,8 +132,6 @@ void Assembler::dotLine(std::string &line) {
   std::stringstream stringStream(line);
   stringStream >> stringBuffer;
 
-  std::cout << "[.]: Special word: " << stringBuffer << std::endl;
-
   if (stringBuffer == ".text") {
     currentSection = TEXT;
 
@@ -145,9 +140,6 @@ void Assembler::dotLine(std::string &line) {
   } else if (stringBuffer == ".globl") {
     // Read symbol name
     stringStream >> stringBuffer;
-
-    std::cout << "[.globl]: exporting symbol named " << stringBuffer
-              << std::endl;
 
     makeSymbolGlobal(stringBuffer);
   } else {
@@ -243,9 +235,10 @@ void Assembler::parseInstruction(std::string instructionCode,
 
   try {
     instructionEnum = resolveInstruction(instructionCode);
-  } catch (std::runtime_error &) {
+  } catch (std::runtime_error &exception) {
     // Try to see if it is a pseudo instruction
     parsePseudoInstruction(instructionCode, operands);
+    return;
   }
 
   addRawInstruction(instructionEnum, operands);
@@ -294,29 +287,37 @@ void Assembler::parsePseudoInstruction(std::string instructionCode,
     addRawInstruction(OR, operands);
     break;
   case LOAD_IMMEDIATE:
+  case LOAD_ADDRESS:
     // li $x, IMM =>
     // 1. lui $x, IMM >> 16
     // 2. ori $x, $x, IMM & 0x0000ffff
 
     if (operands.size() != 2)
-      throw std::runtime_error("Invalid operands for 'li' instruction");
+      throw std::runtime_error("Invalid operands for 'li'/'la' instruction");
 
-    tempImmediate = std::stoi(operands[1]);
+    if (isValidSymbolName(operands[1])) {
 
-    // * lui
-    tempOperands1.reset(new std::vector<std::string>(
-        {operands[0], std::to_string(tempImmediate >> 16)}));
+      if (pseudoInstructionEnum == LOAD_IMMEDIATE)
+        throw std::runtime_error(
+            "Invalid operands for 'li': cannot be a symbol");
+
+      tempOperands1.reset(
+          new std::vector<std::string>({operands[0], operands[1]}));
+
+      tempOperands2.reset(new std::vector<std::string>(
+          {operands[0], operands[0], operands[1]}));
+    } else {
+      tempImmediate = std::stoi(operands[1]);
+      tempOperands1.reset(new std::vector<std::string>(
+          {operands[0], std::to_string(tempImmediate >> 16)}));
+
+      tempOperands2.reset(new std::vector<std::string>(
+          {operands[0], operands[0],
+           std::to_string(tempImmediate & 0x0000ffff)}));
+    }
 
     addRawInstruction(LUI, *tempOperands1);
-
-    // * ori
-    tempOperands2.reset(new std::vector<std::string>(
-        {operands[0], operands[0],
-         std::to_string(tempImmediate & 0x0000ffff)}));
-
     addRawInstruction(ORI, *tempOperands2);
-    break;
-  case LOAD_ADDRESS:
     break;
   case BRANCH_GREATER_THAN:
     break;
