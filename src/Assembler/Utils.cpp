@@ -103,16 +103,16 @@ uint8_t getOpCode(InstructionsAvailable &instruction) {
     return 10;
     break;
   case SLTIU:
-    return 12;
+    return 11;
     break;
   case ANDI:
-    return 13;
+    return 12;
     break;
   case ORI:
-    return 14;
+    return 13;
     break;
   case XORI:
-    return 15;
+    return 14;
     break;
   case LW:
     return 35;

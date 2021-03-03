@@ -287,7 +287,7 @@ void Assembler::populateInstructionWithOperands(
     case SRL:
       *instruction |= getRegisterNumberFromString(operands.at(0)) << 11;
       *instruction |= getRegisterNumberFromString(operands.at(1)) << 16;
-      *instruction |= getImmediate5Bit(operands.at(2));
+      *instruction |= getImmediate5Bit(operands.at(2)) << 6;
       break;
     case MULT:
     case MULTU:
