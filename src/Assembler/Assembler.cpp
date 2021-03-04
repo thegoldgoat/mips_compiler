@@ -320,21 +320,64 @@ void Assembler::parsePseudoInstruction(std::string instructionCode,
     addRawInstruction(ORI, *tempOperands2);
     break;
   case BRANCH_GREATER_THAN:
-    throw std::runtime_error("Unimplemented pseudoinstruction");
-    break;
   case BRANCH_LESS_THAN:
-    throw std::runtime_error("Unimplemented pseudoinstruction");
+    // bgt $x, $y, IMM =>
+    // blt $x, $y, IMM =>
+    // 1. slt $at, $y, $x <- for bgt
+    // 1. slt $at, $x, $y <- for blt
+    // 2. bne $at, $zero, IMM
+    if (operands.size() != 3)
+      throw std::runtime_error("Invalid operands for 'bgt'/'blt' instruction");
+
+    if (pseudoInstructionEnum == BRANCH_GREATER_THAN)
+      tempOperands1.reset(
+          new std::vector<std::string>({"$at", operands[1], operands[0]}));
+    else
+      tempOperands1.reset(
+          new std::vector<std::string>({"$at", operands[0], operands[1]}));
+
+    tempOperands2.reset(
+        new std::vector<std::string>({"$at", "$zero", operands[2]}));
+
+    addRawInstruction(SLT, *tempOperands1);
+    addRawInstruction(BNE, *tempOperands2);
     break;
   case BRANCH_GREATER_EQUAL:
-    throw std::runtime_error("Unimplemented pseudoinstruction");
-    break;
   case BRANCH_LESS_EQUAL:
-    throw std::runtime_error("Unimplemented pseudoinstruction");
+    // bge $x, $y, IMM =>
+    // ble $x, $y, IMM =>
+    // 1. slt $at, $x, $y <- for bge
+    // 1. slt $at, $y, $x <- for ble
+    // 2. beq $at, $zero, IMM
+    if (operands.size() != 3)
+      throw std::runtime_error("Invalid operands for 'bge'/'gle' instruction");
+
+    if (pseudoInstructionEnum == BRANCH_GREATER_EQUAL)
+      tempOperands1.reset(
+          new std::vector<std::string>({"$at", operands[0], operands[1]}));
+    else
+      tempOperands1.reset(
+          new std::vector<std::string>({"$at", operands[1], operands[0]}));
+
+    tempOperands2.reset(
+        new std::vector<std::string>({"$at", "$zero", operands[2]}));
+
+    addRawInstruction(SLT, *tempOperands1);
+    addRawInstruction(BEQ, *tempOperands2);
+    break;
     break;
   case NOT:
-    throw std::runtime_error("Unimplemented pseudoinstruction");
+    // not $x, $y => nor $x, $y, $zero
+    if (operands.size() != 2)
+      throw std::runtime_error("Invalid operands for 'not' instruction");
+
+    operands.push_back("$zero");
+
+    addRawInstruction(NOR, operands);
     break;
   case NOP:
+    if (operands.size() != 0)
+      throw std::runtime_error("Invalid operands for 'nop' instruction");
     tempOperands1.reset(new std::vector<std::string>({"$zero", "$zero", "0"}));
     addRawInstruction(SLL, *tempOperands1);
     break;
